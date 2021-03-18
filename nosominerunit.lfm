@@ -9,6 +9,7 @@ object Form1: TForm1
   ClientHeight = 333
   ClientWidth = 324
   Menu = MainMenu1
+  OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnWindowStateChange = FormWindowStateChange
   Position = poScreenCenter
@@ -103,9 +104,9 @@ object Form1: TForm1
     TabOrder = 4
   end
   object Label1: TLabel
-    Left = 8
+    Left = 14
     Height = 15
-    Top = 72
+    Top = 76
     Width = 29
     Caption = 'CPUS'
     ParentColor = False
@@ -355,6 +356,14 @@ object Form1: TForm1
       object MenuItem3: TMenuItem
         Caption = 'Exit Pool'
         OnClick = MenuItem3Click
+      end
+      object MenuItem4: TMenuItem
+        Caption = 'Help'
+        OnClick = MenuItem4Click
+      end
+      object MenuItem5: TMenuItem
+        Caption = 'Quit'
+        OnClick = MenuItem5Click
       end
     end
   end

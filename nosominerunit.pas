@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls,
-  Buttons, Menus, IdTCPClient,IdGlobal, strutils, DCPsha256;
+  Buttons, Menus, IdTCPClient,IdGlobal, strutils, DCPsha256, nosominerutils,lclintf;
 
 type
 
@@ -54,6 +54,8 @@ type
     MenuItem1: TMenuItem;
     MenuItem2: TMenuItem;
     MenuItem3: TMenuItem;
+    MenuItem4: TMenuItem;
+    MenuItem5: TMenuItem;
     Panel1: TPanel;
     Timer1: TTimer;
     Timer2: TTimer;
@@ -62,10 +64,13 @@ type
     TrayIcon1: TTrayIcon;
     procedure BitBtn1Click(Sender: TObject);
     procedure ComboBox1Change(Sender: TObject);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: boolean);
     procedure FormCreate(Sender: TObject);
     procedure FormWindowStateChange(Sender: TObject);
     procedure MenuItem2Click(Sender: TObject);
     procedure MenuItem3Click(Sender: TObject);
+    procedure MenuItem4Click(Sender: TObject);
+    procedure MenuItem5Click(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure Timer2Timer(Sender: TObject);
     procedure TimerClearInfoTimer(Sender: TObject);
@@ -90,6 +95,7 @@ function PoolRequestMinerInfo():boolean;
 Procedure SendPoolMessage(mensaje:string);
 Procedure SendPoolStep();
 Procedure SendPoolHashRate();
+function PoolRequestPayment():boolean;
 Procedure ReadPoolClientLines();
 Function Parameter(LineText:String;ParamNumber:int64):String;
 function Int2Curr(Value: int64): string;
@@ -99,7 +105,8 @@ Procedure Showinfo(Text:String);
 
 Const
   DataFileName = 'minerdata.dat';
-  minerversion = 'M1.2';
+  minerversion = 'M1.3';
+  B58Alphabet : string = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 
 var
   Form1: TForm1;
@@ -129,8 +136,7 @@ var
   Myfoundedsteps : integer = 0;
   reconnecttime : integer = 0;
   DisConx : integer = 0;
-
-
+  PaymentRequested : boolean = false;
 
 implementation
 
@@ -212,6 +218,19 @@ if MessageDlg('Warning', 'Are you sure?', mtConfirmation,
    end;
 end;
 
+procedure TForm1.MenuItem4Click(Sender: TObject);
+begin
+OpenDocument('https://nosocoin.blogspot.com/2021/03/nosominer-faq.html');
+end;
+
+procedure TForm1.MenuItem5Click(Sender: TObject);
+begin
+showinfo('Closing');
+Mineron := false;
+sleep(100);
+application.Terminate;
+end;
+
 Procedure SaveDataFile();
 Begin
 userdata.address:=form1.LabeledEdit2.Text;
@@ -229,6 +248,14 @@ procedure TForm1.ComboBox1Change(Sender: TObject);
 begin
 userdata.cpus := form1.ComboBox1.ItemIndex+1;
 SaveDataFile;
+end;
+
+procedure TForm1.FormCloseQuery(Sender: TObject; var CanClose: boolean);
+begin
+showinfo('Closing');
+Mineron := false;
+sleep(100);
+application.Terminate;
 end;
 
 // START
@@ -288,8 +315,19 @@ if mineron then
       end;
    if lastpago > 0 then label2.Hint:='You can request a payment now';
    end;
-if lastpago<=0 then label2.Caption:=IntToStr(lastpago)
-else label2.Caption:='Done';
+if lastpago<=0 then
+   begin
+   label2.Caption:=IntToStr(lastpago);
+   PaymentRequested := false;
+   end
+else
+   begin
+   if ((not PaymentRequested) and (PoolRequestPayment)) then
+      begin
+      PaymentRequested := true;
+      label2.Caption := 'Wait';
+      end;
+   end;
 edit3.Text:= Int2Curr(balance);
 if canalpool.Connected then image1.Visible:=true
 else image1.Visible:=false;
@@ -365,6 +403,7 @@ form1.combobox1.Enabled:=false;
 for contador := 0 to Cpusforminning-1 do
    begin
    MinerThreads[contador] := TMyThread.Create(true);
+   MinerThreads[contador].FreeOnTerminate:=true;
    MinerThreads[contador].Start;
    end;
 lastblock := TargetBlock;
@@ -385,6 +424,11 @@ procedure TForm1.BitBtn1Click(Sender: TObject);
 begin
 if not mineron then
    begin
+   if not isvalidaddress(labelededit2.Text) then
+      begin
+      showinfo('Invalid Noso Address');
+      exit;
+      end;
    if not ConnectPoolClient(labelededit1.Text,StrToIntDef(labelededit3.Text,8082),labelededit4.Text,labelededit2.Text) then memo1.Lines.Add('Unable to connect')
    else Showinfo('Connected');
    if canalpool.Connected then
@@ -442,6 +486,7 @@ try
 Except on E:Exception do
    begin
    result := false;
+   showinfo('Unable to connect to pool server');
    end;
 end;
 End;
@@ -523,6 +568,22 @@ Except On E:Exception do
 end;
 End;
 
+function PoolRequestPayment():boolean;
+Begin
+result := false;
+try
+   if CanalPool.Connected then
+      begin
+      SendPoolMessage(userdata.password+' '+userdata.address+' PAYMENT');
+      Showinfo('Payment request sent');
+      result:= true;
+      end
+   else Showinfo('Pool server is not connected');
+Except On E:Exception do
+   Showinfo('Pool payment request error');
+end;
+End;
+
 Procedure ReadPoolClientLines();
 var
   linea : string;
@@ -596,6 +657,9 @@ try
          end
       else if parameter(linea,0) = 'PAYMENTOK' then
          begin
+         showinfo( 'Payment: Nos '+Int2curr(StrToIntDef(Parameter(linea,1),0)) );
+         PoolRequestMyStatus();
+         PaymentRequested := false;
          end
       else if parameter(linea,0) = 'PASSFAILED' then
          begin
@@ -731,7 +795,7 @@ end;
 Procedure Showinfo(Text:String);
 Begin
 form1.panel1.Caption:=text;
-form1.Panel1.Width:=50+(length(text)*10);
+form1.Panel1.Width:=(length(text)*8);
 form1.Panel1.left := 162 - (form1.Panel1.Width div 2);
 form1.panel1.BringToFront;
 form1.panel1.visible := true;
