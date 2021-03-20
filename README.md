@@ -2,4 +2,4 @@
 
 Stand alone miner for Noso cryptocurrency
 
-Current version: M1.3
+Current version: M1.4
