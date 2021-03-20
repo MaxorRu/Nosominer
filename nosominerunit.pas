@@ -39,6 +39,7 @@ type
   TForm1 = class(TForm)
     BitBtn1: TBitBtn;
     CheckBox1: TCheckBox;
+    CheckBox2: TCheckBox;
     ComboBox1: TComboBox;
     ComboPool: TComboBox;
     Edit1: TEdit;
@@ -555,6 +556,7 @@ if not mineron then
    if not ConnectPoolClient(UserData.ip,USerData.port,UserData.password,UserData.address) then
       begin
       showinfo('Unable to connect');
+      if checkbox2.Checked then beep;
       BitBtn1.Enabled:=true;
       end
    else Showinfo('Connected');
@@ -595,6 +597,7 @@ Except on E:Exception do
    begin
    result := false;
    showinfo('Unable to connect to pool server');
+   if form1.checkbox2.Checked then beep;
    end;
 end;
 End;
