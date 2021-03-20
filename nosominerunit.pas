@@ -6,7 +6,8 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls,
-  Buttons, Menus, IdTCPClient,IdGlobal, strutils, DCPsha256, nosominerutils,lclintf;
+  Buttons, Menus, IdTCPClient, IdGlobal, strutils, nosominerutils,
+  lclintf, ComCtrls, crt;
 
 type
 
@@ -22,12 +23,16 @@ type
      RTO:Integer
      end;
 
+  PoolData = Packed record
+     name : string[20];
+     ip : string[15];
+     port : integer;
+     pass : string[20];
+     end;
   type
   TMyThread = class(TThread)
     procedure Execute; override;
   end;
-
-
 
   { TForm1 }
 
@@ -35,6 +40,7 @@ type
     BitBtn1: TBitBtn;
     CheckBox1: TCheckBox;
     ComboBox1: TComboBox;
+    ComboPool: TComboBox;
     Edit1: TEdit;
     Edit2: TEdit;
     Edit3: TEdit;
@@ -45,6 +51,7 @@ type
     Label4: TLabel;
     Label5: TLabel;
     Label6: TLabel;
+    Label7: TLabel;
     LabeledEdit1: TLabeledEdit;
     LabeledEdit2: TLabeledEdit;
     LabeledEdit3: TLabeledEdit;
@@ -64,6 +71,7 @@ type
     TrayIcon1: TTrayIcon;
     procedure BitBtn1Click(Sender: TObject);
     procedure ComboBox1Change(Sender: TObject);
+    procedure ComboPoolChange(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: boolean);
     procedure FormCreate(Sender: TObject);
     procedure FormWindowStateChange(Sender: TObject);
@@ -86,8 +94,6 @@ Procedure CreateDataFile();
 Procedure LoadDataFile();
 Procedure SaveDataFile();
 Procedure StartMiners();
-Procedure ResetMinerData();
-Procedure IncreaseHashSeed();
 function ConnectPoolClient(Ip:String;Port:Integer;password:string;address:string):boolean;
 Procedure DisconnectPoolClient();
 Procedure PoolRequestMyStatus();
@@ -97,15 +103,16 @@ Procedure SendPoolStep();
 Procedure SendPoolHashRate();
 function PoolRequestPayment():boolean;
 Procedure ReadPoolClientLines();
-Function Parameter(LineText:String;ParamNumber:int64):String;
-function Int2Curr(Value: int64): string;
-function Sha256(StringToHash:string):string;
 Procedure StopMiner();
-Procedure Showinfo(Text:String);
+Procedure KillMinerThreads();
+Procedure LockControls();
+Procedure UnLockControls();
+
 
 Const
   DataFileName = 'minerdata.dat';
-  minerversion = 'M1.3';
+  PoolListFilename = 'poollist.txt';
+  minerversion = 'M1.4';
   B58Alphabet : string = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 
 var
@@ -137,6 +144,8 @@ var
   reconnecttime : integer = 0;
   DisConx : integer = 0;
   PaymentRequested : boolean = false;
+  KillThreads : boolean = false;
+  PoolsList : array of pooldata;
 
 implementation
 
@@ -144,6 +153,70 @@ implementation
 
 { TForm1 }
 
+// ***FORM 1***
+
+// CREATE
+procedure TForm1.FormCreate(Sender: TObject);
+var
+  contador : integer;
+begin
+form1.Caption:='Noso Miner '+minerversion;
+timer1.Enabled:=false;
+timer2.Enabled:=false;
+TimerClearInfo.Enabled:=false;
+timerreconnect.Enabled:=false;
+form1.Height:=207;
+if not fileexists(PoolListFilename) then CreatePoolList;
+LoadPoolList;
+label2.Caption:='';
+label3.Caption:='0 Kh';
+
+if GetEnvironmentVariable('NUMBER_OF_PROCESSORS') = '' then MaxCPU := 1
+else MaxCPU := StrToInt(GetEnvironmentVariable('NUMBER_OF_PROCESSORS'));
+setlength(MinerThreads,MaxCPU);
+for contador := 1 to MaxCPU do
+   ComboBox1.Items.Add(IntToStr(contador));
+
+ComboBox1.ItemIndex:=combobox1.Items.Count-1;
+if not fileexists(DataFileName) then CreateDataFile() else LoadDataFile();
+if userdata.MinePrefix<>'' then MenuItem3.Enabled:=true
+else MenuItem3.Enabled:=false;
+if userdata.MinePrefix<>'' then
+   begin
+   form1.LabeledEdit1.Enabled:=false;
+   form1.LabeledEdit2.Enabled:=false;
+   form1.LabeledEdit3.Enabled:=false;
+   form1.LabeledEdit4.Enabled:=false;
+   form1.combopool.Enabled:=false;
+   end;
+CanalPool := TIdTCPClient.Create(form1);
+end;
+
+// CLOSE QUERY
+procedure TForm1.FormCloseQuery(Sender: TObject; var CanClose: boolean);
+begin
+showinfo('Closing');
+Mineron := false;
+sleep(100);
+application.Terminate;
+end;
+
+// CPU NUMBER CHANGE
+procedure TForm1.ComboBox1Change(Sender: TObject);
+begin
+userdata.cpus := form1.ComboBox1.ItemIndex+1;
+SaveDataFile;
+end;
+
+// POOL SELECTION CHANGE
+procedure TForm1.ComboPoolChange(Sender: TObject);
+begin
+LoadPool(ComboPool.ItemIndex);
+end;
+
+// ***MINER****
+
+// EXECUTE
 procedure TMyThread.Execute;
 var
   solucion : string = '';
@@ -165,8 +238,9 @@ if (AnsiContainsStr(Solucion,copy(TargetString,1,Targetchars))) then
 until Not Mineron;
 end;
 
-// DATA FILE
+// ***DATA FILE***
 
+// CREATE
 Procedure CreateDataFile();
 var
   dato: MinerData;
@@ -180,13 +254,14 @@ dato.password:='';
 dato.cpus:=1;
 dato.MineAddress:='';
 dato.MinePrefix:='';
-dato.CTO:=500;
+dato.CTO:=1000;
 dato.RTO:=200;
 UserData := dato;
 write(datafile,dato);
 closefile(datafile);
 End;
 
+// LOAD
 Procedure LoadDataFile();
 Begin
 assignfile(datafile,Datafilename);
@@ -203,11 +278,31 @@ form1.Edit1.Text:=userdata.MineAddress;
 form1.Edit2.Text:=userdata.MinePrefix;
 End;
 
+// SAVE
+Procedure SaveDataFile();
+Begin
+userdata.address:=form1.LabeledEdit2.Text;
+userdata.ip:=form1.LabeledEdit1.Text;
+userdata.port := StrToIntDef(form1.LabeledEdit3.Text,8082);
+userdata.password:=form1.LabeledEdit4.Text;
+userdata.cpus := form1.ComboBox1.ItemIndex+1;
+userdata.MineAddress:=form1.Edit1.Text;
+userdata.MinePrefix:=form1.edit2.Text;
+assignfile(datafile,Datafilename);
+rewrite(datafile);
+write(datafile,UserData);
+closefile(datafile);
+End;
+
+// ***MAIN MENU***
+
+// MAIN MENU : SAVE
 procedure TForm1.MenuItem2Click(Sender: TObject);
 begin
 SaveDataFile();
 end;
 
+// MAIN MENU : EXIT POOL
 procedure TForm1.MenuItem3Click(Sender: TObject);
 begin
 if MessageDlg('Warning', 'Are you sure?', mtConfirmation,
@@ -215,14 +310,21 @@ if MessageDlg('Warning', 'Are you sure?', mtConfirmation,
    begin
    CreateDataFile();
    LoadDataFile();
+   form1.LabeledEdit1.Enabled:=true;
+   form1.LabeledEdit2.Enabled:=true;
+   form1.LabeledEdit3.Enabled:=true;
+   form1.LabeledEdit4.Enabled:=true;
+   form1.combopool.Enabled:=true;
    end;
 end;
 
+// MAIN MENU : HELP
 procedure TForm1.MenuItem4Click(Sender: TObject);
 begin
 OpenDocument('https://nosocoin.blogspot.com/2021/03/nosominer-faq.html');
 end;
 
+// MAIN MENU : CLOSE
 procedure TForm1.MenuItem5Click(Sender: TObject);
 begin
 showinfo('Closing');
@@ -231,63 +333,30 @@ sleep(100);
 application.Terminate;
 end;
 
-Procedure SaveDataFile();
-Begin
-userdata.address:=form1.LabeledEdit2.Text;
-userdata.ip:=form1.LabeledEdit1.Text;
-userdata.port := StrToIntDef(form1.LabeledEdit3.Text,8082);
-userdata.password:=form1.LabeledEdit4.Text;
-userdata.cpus := form1.ComboBox1.ItemIndex+1;
-assignfile(datafile,Datafilename);
-rewrite(datafile);
-write(datafile,UserData);
-closefile(datafile);
-End;
+// ***TRAYICON***
 
-procedure TForm1.ComboBox1Change(Sender: TObject);
+// RESTORE FROM TRAY
+procedure TForm1.TrayIcon1DblClick(Sender: TObject);
 begin
-userdata.cpus := form1.ComboBox1.ItemIndex+1;
-SaveDataFile;
+TrayIcon1.visible:=false;
+Form1.WindowState:=wsNormal;
+Form1.Show;
 end;
 
-procedure TForm1.FormCloseQuery(Sender: TObject; var CanClose: boolean);
+// MINIMIZE TO TRAY
+procedure TForm1.FormWindowStateChange(Sender: TObject);
 begin
-showinfo('Closing');
-Mineron := false;
-sleep(100);
-application.Terminate;
+if checkbox1.Checked then
+   if Form1.WindowState = wsMinimized then
+      begin
+      TrayIcon1.visible:=true;
+      form1.hide;
+      end;
 end;
 
-// START
+// ***TIMERS***
 
-procedure TForm1.FormCreate(Sender: TObject);
-var
-  contador : integer;
-begin
-timer1.Enabled:=false;
-timer2.Enabled:=false;
-TimerClearInfo.Enabled:=false;
-timerreconnect.Enabled:=false;
-form1.Height:=207;
-label2.Caption:='??';
-label3.Caption:='0 Kh';
-form1.Caption:='Noso Miner '+minerversion;
-if GetEnvironmentVariable('NUMBER_OF_PROCESSORS') = '' then MaxCPU := 1
-else MaxCPU := StrToInt(GetEnvironmentVariable('NUMBER_OF_PROCESSORS'));
-setlength(MinerThreads,MaxCPU);
-for contador := 1 to MaxCPU do
-   begin
-   ComboBox1.Items.Add(IntToStr(contador));
-   end;
-ComboBox1.ItemIndex:=combobox1.Items.Count-1;
-if not fileexists(DataFileName) then CreateDataFile() else LoadDataFile();
-if userdata.MinePrefix<>'' then MenuItem3.Enabled:=true
-else MenuItem3.Enabled:=false;
-CanalPool := TIdTCPClient.Create(form1);
-end;
-
-// EMPEZAR A MINAR
-
+// TIMER1: MINER INTERVAL (200)
 procedure TForm1.Timer1Timer(Sender: TObject);
 var
   contador : integer;
@@ -301,10 +370,12 @@ if mineron then
    esteintervalo := MinerNumber;
    if esteintervalo > lastintervalo then hashes := esteintervalo - lastintervalo
    else hashes := esteintervalo + 900000000 - lastintervalo;
-   velocidad := hashes*5 div 1000;
+   velocidad := abs(hashes div 1000);
+   if velocidad > MaxCPU*1000 then velocidad := 0;
    label3.Caption:=inttoStr(velocidad)+' Kh';
    lastintervalo := esteintervalo;
-   form1.Label4.Caption:='Block:'+IntToStr(Targetblock);{+' Target:'+copy(targetstring,1,targetchars)+slinebreak+
+   form1.Label4.Caption:='Block:'+IntToStr(Targetblock)+' Step:'+IntToStr(foundedsteps);{+' Target:'+
+   copy(targetstring,1,targetchars)+slinebreak+
    'Chars: '+IntToStr(TargetChars)+' Step:'+IntToStr(foundedsteps)+' Found:'+IntToStr(Myfoundedsteps)+' Disc:'+IntToStr(DisConx); }
    form1.Label5.Caption:= MinerSeed+IntToStr(MinerNumber);
    form1.Label6.Caption:='Pool:'+IntToStr(poolhashrate);
@@ -322,7 +393,7 @@ if lastpago<=0 then
    end
 else
    begin
-   if ((not PaymentRequested) and (PoolRequestPayment)) then
+   if ((not PaymentRequested) and (balance>0) and (PoolRequestPayment)) then
       begin
       PaymentRequested := true;
       label2.Caption := 'Wait';
@@ -340,7 +411,6 @@ if thisstep <>'' then
    SendPoolStep;
    Myfoundedsteps +=1;
    thisstep := '';
-   resetminerdata();
    for contador := 1 to 10 do
       if PoolRequestMinerInfo() then break
       else
@@ -355,6 +425,7 @@ if thisstep <>'' then
 timer1.Enabled:=true;
 end;
 
+// TIMER2: WAIT FOR NEW DATA (2000)
 procedure TForm1.Timer2Timer(Sender: TObject);
 begin
 form1.Timer2.Enabled:=false;
@@ -362,6 +433,7 @@ PoolRequestMyStatus();
 PoolRequestMinerInfo();
 end;
 
+// TIMERCLEAR INFO: REMOVE INFO PANEL (2000)
 procedure TForm1.TimerClearInfoTimer(Sender: TObject);
 begin
 TimerClearInfo.Enabled:=false;
@@ -369,6 +441,7 @@ panel1.Caption:='';
 panel1.visible := false;
 end;
 
+// TIMERRECONNECT: RECONNECT TO SERVER (1000x5)
 procedure TForm1.TimerReconnectTimer(Sender: TObject);
 begin
 form1.timerreconnect.Enabled:=false;
@@ -378,30 +451,33 @@ if reconnecttime >0 then form1.timerreconnect.Enabled:=true
 else
    begin
    panel1.Caption:='';
+   panel1.visible := false;
    BitBtn1Click(self);
    end;
 end;
 
-Procedure ResetMinerData();
-Begin
-
-End;
 
 Procedure StartMiners();
 var
   contador : integer;
 Begin
+LockControls;
 form1.bitbtn1.Caption:='STOP';
+form1.BitBtn1.Enabled:=true;
 if lastblock <> TargetBlock then MinerNumber := 99999999;
 MinerSeed := userdata.MinePrefix;
 MINERON := TRUE;
-form1.Label4.Caption:='Block:'+IntToStr(Targetblock);{+' Target:'+copy(targetstring,1,targetchars)+slinebreak+
+form1.Label4.Caption:='Block:'+IntToStr(Targetblock)+' Step:'+IntToStr(foundedsteps);{+' Target:'+copy(targetstring,1,targetchars)+slinebreak+
    'Chars: '+IntToStr(TargetChars)+' Step:'+IntToStr(foundedsteps)+' Found:'+IntToStr(Myfoundedsteps)+' Disc:'+IntToStr(DisConx);}
 Cpusforminning := form1.ComboBox1.ItemIndex+1;
 form1.memo1.Lines.Add('Starting '+inttoStr(Cpusforminning)+' cores');
 form1.combobox1.Enabled:=false;
+mineron := false;
+delay(10);
+mineron := true;
 for contador := 0 to Cpusforminning-1 do
    begin
+   if assigned(MinerThreads[contador]) then MinerThreads[contador].Terminate;
    MinerThreads[contador] := TMyThread.Create(true);
    MinerThreads[contador].FreeOnTerminate:=true;
    MinerThreads[contador].Start;
@@ -416,25 +492,76 @@ form1.bitbtn1.Caption:='Mine Noso';
 Form1.label3.Caption := '0 Kh';
 velocidad := 0;
 mineron := false;
+delay(10);
 If canalpool.Connected then DisconnectPoolClient;
+UnLockControls;
+form1.BitBtn1.Enabled:=true;
+End;
+
+Procedure KillMinerThreads();
+Begin
+
+End;
+
+Procedure LockControls();
+Begin
+form1.LabeledEdit1.Enabled:=false;
+form1.LabeledEdit2.Enabled:=false;
+form1.LabeledEdit3.Enabled:=false;
+form1.LabeledEdit4.Enabled:=false;
+form1.Label2.Visible:=true;
+form1.Label3.Visible:=true;
+form1.Label4.Visible:=true;
+form1.Label6.Visible:=true;
+form1.Edit3.Visible:=true;
+form1.combobox1.Enabled:=false;
+form1.combopool.Enabled:=false;
+End;
+
+Procedure UnLockControls();
+Begin
+if not (userdata.MineAddress<>'') then
+   begin
+   form1.LabeledEdit1.Enabled:=true;
+   form1.LabeledEdit2.Enabled:=true;
+   form1.LabeledEdit3.Enabled:=true;
+   form1.LabeledEdit4.Enabled:=true;
+   form1.combopool.Enabled:=true;
+   end;
+form1.Label2.Visible:=false;
+form1.Label3.Visible:=false;
+form1.Label4.Visible:=false;
+form1.Label6.Visible:=false;
+form1.Edit3.Visible:=false;
 form1.combobox1.Enabled:=true;
 End;
 
 procedure TForm1.BitBtn1Click(Sender: TObject);
 begin
+BitBtn1.Enabled:=false;
+application.ProcessMessages;
 if not mineron then
    begin
-   if not isvalidaddress(labelededit2.Text) then
+   userdata.address:=labelededit2.Text;
+   UserData.ip:= labelededit1.Text;
+   USerData.port := StrToIntDef(labelededit3.Text,8082);
+   UserData.password:=labelededit4.Text;
+   if length(userdata.address)<5 then
       begin
-      showinfo('Invalid Noso Address');
+      showinfo('Invalid address');
+      BitBtn1.Enabled:=true;
       exit;
       end;
-   if not ConnectPoolClient(labelededit1.Text,StrToIntDef(labelededit3.Text,8082),labelededit4.Text,labelededit2.Text) then memo1.Lines.Add('Unable to connect')
+   if not ConnectPoolClient(UserData.ip,USerData.port,UserData.password,UserData.address) then
+      begin
+      showinfo('Unable to connect');
+      BitBtn1.Enabled:=true;
+      end
    else Showinfo('Connected');
    if canalpool.Connected then
       begin
       timer1.Enabled:=true;
-      if userdata.MineAddress = '' then
+      if not IsValidAddress(userdata.MineAddress) then
          begin
          SendPoolMessage(userdata.password+' '+userdata.address+' JOIN');
          Showinfo('Join pool request sent');
@@ -449,25 +576,6 @@ if not mineron then
 else
    begin
    StopMiner();
-   end;
-End;
-
-// MINER
-
-Procedure IncreaseHashSeed();
-var
-  LastChar : integer;
-  contador: integer;
-Begin
-LastChar := Ord(MinerSeed[9])+1;
-MinerSeed[9] := chr(LastChar);
-for contador := 9 downto 1 do
-   begin
-   if Ord(MinerSeed[contador])>126 then
-      begin
-      MinerSeed[contador] := chr(33);
-      MinerSeed[contador-1] := chr(Ord(MinerSeed[contador-1])+1);
-      end;
    end;
 End;
 
@@ -609,10 +717,11 @@ try
          form1.Memo1.Lines.Add('Timeout error??');
          end;
       END;
+      form1.memo1.Lines.Add(linea);
       if parameter(linea,0) = 'JOINOK' then
          begin
-         userdata.MineAddress:=parameter(linea,1);
-         userdata.MinePrefix:=parameter(linea,2);
+         form1.edit1.text:=parameter(linea,1);
+         form1.edit2.text:=parameter(linea,2);
          showinfo('Joined the pool!');
          SaveDataFile();
          LoadDataFile();
@@ -622,7 +731,8 @@ try
          end
       else if parameter(linea,0) = 'JOINFAILED' then
          begin
-         Showinfo('Probably the pool is full.');
+         Showinfo('Probably this pool is full.');
+         form1.BitBtn1.Enabled:=true;
          end
       else if parameter(linea,0) = 'JOINDONE' then
          begin
@@ -638,7 +748,7 @@ try
          end
       else if parameter(linea,0) = 'STATUSFAILED' then
          begin
-         form1.Memo1.Lines.Add('Seems that your not registered in this pool.');
+         form1.Memo1.Lines.Add('Critical error:STATUSFAILED');
          //DisconnectPoolClient();
          end
       else if parameter(linea,0) = 'MINERINFO' then
@@ -664,6 +774,7 @@ try
       else if parameter(linea,0) = 'PASSFAILED' then
          begin
          ShowInfo('Wrong pool password');
+         form1.BitBtn1.Enabled:=true;
          end
       else if parameter(linea,0) = 'POOLSTEPS' then
          begin
@@ -694,133 +805,25 @@ try
          LastPago:= StrToInt64Def(parameter(linea,3),0);
          SendPoolHashRate();
          end
-      else if parameter(linea,0) = 'UNREGISTERED' then
+      else if parameter(linea,0) = 'INVALIDADDRESS' then
          begin
-
+         ShowInfo('Your address is not valid');
+         form1.BitBtn1.Enabled:=true;
          end
-      else form1.Memo1.Lines.Add('Unknown messsage from pool server: '+Linea);
+      else if parameter(linea,0) = 'ALREADYCONNECTED' then
+         begin
+         ShowInfo('Already connected to this pool');
+         form1.BitBtn1.Enabled:=true;
+         end
+      else Showinfo('Unknown messsage from pool server');
       end;
 Except On E:Exception do
    begin
-   form1.Memo1.Lines.Add('Error reading pool client: '+E.Message);
+   form1.Memo1.Lines.Add('Error receinving pool info');
    //DisconnectPoolClient();
    end;
 end;
 End;
-
-// OTHER
-
-// Devuelve un parametro del texto
-Function Parameter(LineText:String;ParamNumber:int64):String;
-var
-  Temp : String = '';
-  ThisChar : Char;
-  Contador : int64 = 1;
-  WhiteSpaces : int64 = 0;
-  parentesis : boolean = false;
-Begin
-while contador <= Length(LineText) do
-   begin
-   ThisChar := Linetext[contador];
-   if ((thischar = '(') and (not parentesis)) then parentesis := true
-   else if ((thischar = '(') and (parentesis)) then
-      begin
-      result := '';
-      exit;
-      end
-   else if ((ThisChar = ')') and (parentesis)) then
-      begin
-      if WhiteSpaces = ParamNumber then
-         begin
-         result := temp;
-         exit;
-         end
-      else
-         begin
-         parentesis := false;
-         temp := '';
-         end;
-      end
-   else if ((ThisChar = ' ') and (not parentesis)) then
-      begin
-      WhiteSpaces := WhiteSpaces +1;
-      if WhiteSpaces > Paramnumber then
-         begin
-         result := temp;
-         exit;
-         end;
-      end
-   else if ((ThisChar = ' ') and (parentesis) and (WhiteSpaces = ParamNumber)) then
-      begin
-      temp := temp+ ThisChar;
-      end
-   else if WhiteSpaces = ParamNumber then temp := temp+ ThisChar;
-   contador := contador+1;
-   end;
-if temp = ' ' then temp := '';
-Result := Temp;
-End;
-
-function Int2Curr(Value: int64): string;
-begin
-Result := IntTostr(Abs(Value));
-result :=  AddChar('0',Result, 9);
-Insert('.',Result, Length(Result)-7);
-If Value <0 THen Result := '-'+Result;
-end;
-
-function Sha256(StringToHash:string):string;
-var
-  Hash: TDCP_sha256;
-  Digest: array[0..31] of byte;  // sha256 produces a 256bit digest (32bytes)
-  Source: string;
-  i: integer;
-  str1: string;
-begin
-Source:= StringToHash;  // here your string for get sha256
-if Source <> '' then
-   begin
-   Hash:= TDCP_sha256.Create(nil);  // create the hash
-   Hash.Init;                        // initialize it
-   Hash.UpdateStr(Source);
-   Hash.Final(Digest);               // produce the digest
-   str1:= '';
-   for i:= 0 to 31 do
-   str1:= str1 + IntToHex(Digest[i],2);
-   Result:=UpperCase(str1);         // display the digest in capital letter
-   Hash.Free;
-   end;
-end;
-
-Procedure Showinfo(Text:String);
-Begin
-form1.panel1.Caption:=text;
-form1.Panel1.Width:=(length(text)*8);
-form1.Panel1.left := 162 - (form1.Panel1.Width div 2);
-form1.panel1.BringToFront;
-form1.panel1.visible := true;
-Form1.TimerClearInfo.Enabled:=true;
-End;
-
-// TRAY ICON
-
-procedure TForm1.TrayIcon1DblClick(Sender: TObject);
-begin
-TrayIcon1.visible:=false;
-Form1.WindowState:=wsNormal;
-Form1.Show;
-end;
-
-procedure TForm1.FormWindowStateChange(Sender: TObject);
-begin
-if checkbox1.Checked then
-   if Form1.WindowState = wsMinimized then
-      begin
-      TrayIcon1.visible:=true;
-      form1.hide;
-      end;
-end;
-
-
+//N3KghZ9cRasYyB7B2AuvuxWHf4gmoFL
 END.
 

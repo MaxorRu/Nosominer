@@ -1,12 +1,12 @@
 object Form1: TForm1
   Left = 1051
-  Height = 353
+  Height = 541
   Top = 135
   Width = 324
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = 'Noso Miner'
-  ClientHeight = 333
+  ClientHeight = 521
   ClientWidth = 324
   Menu = MainMenu1
   OnCloseQuery = FormCloseQuery
@@ -15,9 +15,9 @@ object Form1: TForm1
   Position = poScreenCenter
   LCLVersion = '2.0.10.0'
   object Panel1: TPanel
-    Left = 40
+    Left = 16
     Height = 39
-    Top = 80
+    Top = 440
     Width = 267
     Caption = 'Panel1'
     Color = clWhite
@@ -163,7 +163,7 @@ object Form1: TForm1
     Left = 96
     Height = 23
     Hint = 'Pool address'
-    Top = 72
+    Top = 240
     Width = 224
     Alignment = taCenter
     Enabled = False
@@ -172,9 +172,9 @@ object Form1: TForm1
     TabOrder = 6
   end
   object Edit2: TEdit
-    Left = 232
+    Left = 8
     Height = 23
-    Top = 280
+    Top = 240
     Width = 80
     Alignment = taCenter
     Enabled = False
@@ -184,7 +184,7 @@ object Form1: TForm1
     Left = 8
     Height = 176
     Top = 264
-    Width = 248
+    Width = 312
     Color = clBlack
     Font.CharSet = ANSI_CHARSET
     Font.Color = clWhite
@@ -199,16 +199,18 @@ object Form1: TForm1
   end
   object Edit3: TEdit
     Left = 48
-    Height = 23
+    Height = 15
     Hint = 'Your pool balance'
     Top = 112
     Width = 104
     Alignment = taRightJustify
+    BorderStyle = bsNone
     ParentShowHint = False
     ReadOnly = True
     ShowHint = True
     TabOrder = 9
     Text = '0.00000000'
+    Visible = False
   end
   object Label2: TLabel
     Left = 8
@@ -221,6 +223,7 @@ object Form1: TForm1
     ParentColor = False
     ParentShowHint = False
     ShowHint = True
+    Visible = False
   end
   object Image1: TImage
     Left = 160
@@ -264,6 +267,7 @@ object Form1: TForm1
     ParentColor = False
     ParentShowHint = False
     ShowHint = True
+    Visible = False
   end
   object Label4: TLabel
     Left = 8
@@ -275,11 +279,12 @@ object Form1: TForm1
     ParentColor = False
     ParentShowHint = False
     ShowHint = True
+    Visible = False
   end
   object Label5: TLabel
-    Left = 280
+    Left = 8
     Height = 15
-    Top = 344
+    Top = 216
     Width = 27
     Caption = '!!!!!!!!!'
     ParentColor = False
@@ -294,6 +299,7 @@ object Form1: TForm1
     ParentColor = False
     ParentShowHint = False
     ShowHint = True
+    Visible = False
   end
   object CheckBox1: TCheckBox
     Left = 214
@@ -308,9 +314,28 @@ object Form1: TForm1
     ShowHint = True
     TabOrder = 11
   end
+  object ComboPool: TComboBox
+    Left = 200
+    Height = 23
+    Top = 72
+    Width = 120
+    ItemHeight = 15
+    OnChange = ComboPoolChange
+    Style = csDropDownList
+    TabOrder = 12
+  end
+  object Label7: TLabel
+    Left = 140
+    Height = 15
+    Top = 74
+    Width = 58
+    AutoSize = False
+    Caption = 'Select Pool'
+    ParentColor = False
+  end
   object MainMenu1: TMainMenu
-    Left = 216
-    Top = 320
+    Left = 232
+    Top = 472
     object MenuItem1: TMenuItem
       Caption = 'File'
       object MenuItem2: TMenuItem
@@ -351,6 +376,7 @@ object Form1: TForm1
           F3FF5959F3FF5959F3FF5959F3FF5959F3FF5959F3FF5959F3FF5959F3FF5959
           F3FF5959F3FF5959F3FF5959F3FF5959F3FFA46534FF00000000
         }
+        Visible = False
         OnClick = MenuItem2Click
       end
       object MenuItem3: TMenuItem
@@ -368,27 +394,26 @@ object Form1: TForm1
     end
   end
   object Timer1: TTimer
-    Interval = 200
     OnTimer = Timer1Timer
     Left = 16
-    Top = 400
+    Top = 472
   end
   object Timer2: TTimer
     Interval = 2000
     OnTimer = Timer2Timer
-    Left = 64
-    Top = 400
+    Left = 72
+    Top = 472
   end
   object TimerReconnect: TTimer
     OnTimer = TimerReconnectTimer
-    Left = 168
-    Top = 392
+    Left = 176
+    Top = 472
   end
   object TimerClearInfo: TTimer
     Interval = 2000
     OnTimer = TimerClearInfoTimer
-    Left = 112
-    Top = 400
+    Left = 120
+    Top = 472
   end
   object TrayIcon1: TTrayIcon
     Icon.Data = {
@@ -529,7 +554,7 @@ object Form1: TForm1
       0000
     }
     OnDblClick = TrayIcon1DblClick
-    Left = 216
-    Top = 216
+    Left = 272
+    Top = 472
   end
 end

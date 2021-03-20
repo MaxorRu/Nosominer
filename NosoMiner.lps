@@ -8,11 +8,10 @@
       <Unit0>
         <Filename Value="NosoMiner.lpr"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="-1"/>
-        <WindowIndex Value="-1"/>
-        <TopLine Value="-1"/>
-        <CursorPos X="-1" Y="-1"/>
-        <UsageCount Value="52"/>
+        <EditorIndex Value="2"/>
+        <CursorPos X="40" Y="22"/>
+        <UsageCount Value="74"/>
+        <Loaded Value="True"/>
       </Unit0>
       <Unit1>
         <Filename Value="nosominerunit.pas"/>
@@ -22,10 +21,10 @@
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="NosoMinerUnit"/>
         <IsVisibleTab Value="True"/>
-        <TopLine Value="224"/>
-        <CursorPos X="26" Y="258"/>
-        <FoldState Value=" T3lH0E131B1414 p0t80m25"/>
-        <UsageCount Value="52"/>
+        <TopLine Value="789"/>
+        <CursorPos X="50" Y="815"/>
+        <FoldState Value=" T3lN0611136133217-"/>
+        <UsageCount Value="74"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit1>
@@ -33,131 +32,132 @@
         <Filename Value="nosominerutils.pas"/>
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="1"/>
-        <CursorPos X="20"/>
-        <UsageCount Value="27"/>
+        <TopLine Value="139"/>
+        <CursorPos X="53" Y="167"/>
+        <UsageCount Value="49"/>
         <Loaded Value="True"/>
       </Unit2>
     </Units>
     <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
         <Filename Value="nosominerunit.pas"/>
-        <Caret Line="307" Column="14" TopLine="288"/>
+        <Caret Line="158" Column="23" TopLine="130"/>
       </Position1>
       <Position2>
         <Filename Value="nosominerunit.pas"/>
-        <Caret Line="353" Column="29" TopLine="325"/>
+        <Caret Line="437" Column="6" TopLine="420"/>
       </Position2>
       <Position3>
         <Filename Value="nosominerunit.pas"/>
-        <Caret Line="380" Column="30" TopLine="354"/>
+        <Caret Line="699" Column="29" TopLine="682"/>
       </Position3>
       <Position4>
         <Filename Value="nosominerunit.pas"/>
-        <Caret Line="536" Column="19" TopLine="505"/>
+        <Caret Line="657" Column="16" TopLine="641"/>
       </Position4>
       <Position5>
         <Filename Value="nosominerunit.pas"/>
-        <Caret Line="745" Column="19" TopLine="644"/>
+        <Caret Line="334" Column="36" TopLine="324"/>
       </Position5>
       <Position6>
         <Filename Value="nosominerunit.pas"/>
-        <Caret Line="515" Column="27" TopLine="506"/>
+        <Caret Line="410" Column="24" TopLine="334"/>
       </Position6>
       <Position7>
         <Filename Value="nosominerunit.pas"/>
-        <Caret Line="268" Column="27" TopLine="259"/>
+        <Caret Line="662" Column="52" TopLine="637"/>
       </Position7>
       <Position8>
         <Filename Value="nosominerunit.pas"/>
-        <Caret Line="270" Column="7" TopLine="259"/>
+        <Caret Line="220" Column="38" TopLine="183"/>
       </Position8>
       <Position9>
         <Filename Value="nosominerunit.pas"/>
-        <Caret Line="289" Column="31" TopLine="261"/>
+        <Caret Line="221" Column="38" TopLine="184"/>
       </Position9>
       <Position10>
         <Filename Value="nosominerunit.pas"/>
-        <Caret Line="270" TopLine="261"/>
+        <Caret Line="222" Column="38" TopLine="185"/>
       </Position10>
       <Position11>
         <Filename Value="nosominerunit.pas"/>
-        <Caret Line="245" TopLine="228"/>
+        <Caret Line="221" Column="38" TopLine="183"/>
       </Position11>
       <Position12>
         <Filename Value="nosominerunit.pas"/>
-        <Caret Line="43" Column="5" TopLine="26"/>
+        <Caret Line="222" Column="38" TopLine="185"/>
       </Position12>
       <Position13>
         <Filename Value="nosominerunit.pas"/>
-        <Caret Line="245" Column="7" TopLine="206"/>
+        <Caret Line="221" Column="38" TopLine="183"/>
       </Position13>
       <Position14>
         <Filename Value="nosominerunit.pas"/>
-        <Caret Line="270" Column="7" TopLine="251"/>
+        <Caret Line="146" Column="32" TopLine="122"/>
       </Position14>
       <Position15>
         <Filename Value="nosominerunit.pas"/>
-        <Caret Line="289" Column="31" TopLine="268"/>
+        <Caret Line="355" Column="16" TopLine="314"/>
       </Position15>
       <Position16>
-        <Filename Value="nosominerunit.pas"/>
-        <Caret Line="291" Column="27" TopLine="268"/>
+        <Filename Value="nosominerutils.pas"/>
+        <Caret Line="186" Column="31" TopLine="157"/>
       </Position16>
       <Position17>
-        <Filename Value="nosominerunit.pas"/>
-        <Caret Line="626" Column="63" TopLine="612"/>
+        <Filename Value="nosominerutils.pas"/>
+        <Caret Line="182" Column="34" TopLine="165"/>
       </Position17>
       <Position18>
         <Filename Value="nosominerutils.pas"/>
-        <Caret Line="26" Column="39" TopLine="5"/>
+        <Caret Line="184" Column="66" TopLine="168"/>
       </Position18>
       <Position19>
         <Filename Value="nosominerutils.pas"/>
-        <Caret Line="12" Column="44"/>
+        <Caret Line="175" Column="58" TopLine="165"/>
       </Position19>
       <Position20>
-        <Filename Value="nosominerutils.pas"/>
-        <Caret Line="23" Column="16" TopLine="6"/>
+        <Filename Value="nosominerunit.pas"/>
+        <Caret Line="170" Column="26" TopLine="155"/>
       </Position20>
       <Position21>
         <Filename Value="nosominerutils.pas"/>
-        <Caret Line="17" Column="17" TopLine="8"/>
+        <Caret Line="208" Column="51" TopLine="185"/>
       </Position21>
       <Position22>
-        <Filename Value="nosominerutils.pas"/>
-        <Caret Line="14" Column="13"/>
+        <Filename Value="nosominerunit.pas"/>
+        <Caret Line="108" Column="23" TopLine="81"/>
       </Position22>
       <Position23>
-        <Filename Value="nosominerutils.pas"/>
-        <Caret Line="19" Column="56" TopLine="9"/>
+        <Filename Value="nosominerunit.pas"/>
+        <Caret Line="109" Column="25" TopLine="81"/>
       </Position23>
       <Position24>
         <Filename Value="nosominerunit.pas"/>
-        <Caret Line="456" Column="24" TopLine="430"/>
+        <Caret Line="472" Column="37" TopLine="459"/>
       </Position24>
       <Position25>
         <Filename Value="nosominerunit.pas"/>
-        <Caret Line="463" Column="24" TopLine="434"/>
+        <Caret Line="491" Column="6" TopLine="474"/>
       </Position25>
       <Position26>
         <Filename Value="nosominerunit.pas"/>
-        <Caret Line="220" Column="72" TopLine="209"/>
+        <Caret Line="363" Column="23" TopLine="359"/>
       </Position26>
       <Position27>
-        <Filename Value="nosominerunit.pas"/>
-        <Caret Line="689" Column="66" TopLine="685"/>
+        <Filename Value="nosominerutils.pas"/>
+        <Caret Line="197" Column="63" TopLine="176"/>
       </Position27>
       <Position28>
-        <Filename Value="nosominerunit.pas"/>
-        <Caret Line="696" Column="66" TopLine="692"/>
+        <Filename Value="NosoMiner.lpr"/>
+        <Caret Line="22" Column="39"/>
       </Position28>
       <Position29>
         <Filename Value="nosominerunit.pas"/>
-        <Caret Line="229" Column="23" TopLine="218"/>
+        <Caret Line="573" Column="43" TopLine="546"/>
       </Position29>
       <Position30>
         <Filename Value="nosominerunit.pas"/>
-        <Caret Line="228" TopLine="212"/>
+        <Caret Line="553" Column="44" TopLine="504"/>
       </Position30>
     </JumpHistory>
     <RunParams>
