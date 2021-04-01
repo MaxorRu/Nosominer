@@ -13,25 +13,52 @@ Type
      residuo : string[255];
      end;
 
+Procedure LaunchReconnection();
+Procedure PlayBeep();
+function GetTime():int64;
 function IsValidAddress(Address:String):boolean;
-Procedure Showinfo(Text:String);
+function ShowHashrate(hashrate:int64):string;
+Procedure UpdateDataGrid();
+Procedure Showinfo(Texto:String);
 function Int2Curr(Value: int64): string;
 function Sha256(StringToHash:string):string;
 Function Parameter(LineText:String;ParamNumber:int64):String;
-Procedure IncreaseHashSeed();
+function IncreaseHashSeed(Seed:string):string;
 Procedure CreatePoolList();
 Procedure LoadPoolList();
 Procedure LoadPool(number:integer);
+Procedure ResetData();
 // MATHS
 function BMDecTo58(numero:string):string;
 function BMB58resumen(numero58:string):string;
 Function BMDividir(Numero1,Numero2:string):DivResult;
 function ClearLeadingCeros(numero:string):string;
+// NEW
+Procedure ResetThreads();
+Procedure UpdateMinerNums();
+function GetMaximunCore():int64;
 
 implementation
 
 Uses
   NosoMinerUnit;
+
+Procedure LaunchReconnection();
+Begin
+Reconnecting := true;
+ReconTime := 5;
+Form1.TimerRecon.Enabled:=true;
+End;
+
+Procedure PlayBeep();
+Begin
+If form1.CheckBox2.Checked then beep;
+End;
+
+function GetTime():int64;
+Begin
+result := (Trunc((Now - EncodeDate(1970, 1 ,1)) * 24 * 60 * 60));
+end;
 
 function IsValidAddress(Address:String):boolean;
 var
@@ -44,16 +71,56 @@ OrigHash := 'N'+OrigHash+clave;
 If OrigHash = Address then result := true else result := false;
 End;
 
-Procedure Showinfo(Text:String);
+// display a hasrate in the correct way
+function ShowHashrate(hashrate:int64):string;
+var
+  divisions : integer = 0;
+  HRStr : string;
 Begin
+if hashrate >= 10000 then
+   begin
+   repeat
+      Hashrate := Hashrate div 1000;
+      divisions +=1;
+   until hashrate < 10000;
+   end;
+if divisions = 0 then HRstr := ' Kh/s'
+else if divisions = 1 then HRstr := ' Mh/s'
+else if divisions = 2 then HRstr := ' Gh/s'
+else if divisions = 3 then HRstr := ' Th/s'
+else if divisions = 4 then HRstr := ' Ph/s';
+result := InttoStr(Hashrate)+ HRstr;
+End;
+
+Procedure UpdateDataGrid();
+Begin
+form1.DataGrid.Cells[1,0]:=IntToStr(Targetblock);
+form1.DataGrid.Cells[1,1]:=IntToStr(TargetDiff);
+form1.DataGrid.Cells[1,2]:=IntToStr(foundedsteps);
+form1.DataGrid.Cells[1,3]:=IntToStr(TargetChars);
+form1.DataGrid.Cells[1,4]:=IntToStr(GetTime-LastPingReceived);
+form1.DataGrid.Cells[1,5]:=IntToStr(Length(ArrNext));
+
+if TimeStartMiner>0 then Form1.labeldebug.Caption:=IntToStr(GetTime-TimeStartMiner)+slinebreak
+else Form1.labeldebug.Caption:='0'+slinebreak;
+Form1.LabelTotal.Caption:=IntToStr(TotalFound);
+End;
+
+Procedure Showinfo(Texto:String);
+Begin
+form1.PanelInfo.BringToFront;
+form1.PanelInfo.Top:=80;
 Form1.TimerClearInfo.Enabled:=false;
-form1.panel1.Caption:=text;
-form1.Panel1.Width:=(length(text)*8);
-form1.Panel1.left := 162 - (form1.Panel1.Width div 2);
-form1.Panel1.top := 80;
-form1.panel1.BringToFront;
-form1.panel1.visible := true;
+if form1.LabelInfo.Caption<>'' then
+   begin
+   form1.LabelInfo.Caption := form1.LabelInfo.Caption+slinebreak+texto;
+   form1.PanelInfo.Height:=form1.PanelInfo.Height+10;
+   form1.PanelInfo.top := form1.PanelInfo.top-5;
+   end
+else form1.LabelInfo.Caption := texto;
+form1.PanelInfo.visible := true;
 Form1.TimerClearInfo.Enabled:=true;
+if not OfficialRelease then form1.Memo1.Lines.Add(texto);
 End;
 
 function Int2Curr(Value: int64): string;
@@ -137,21 +204,22 @@ if temp = ' ' then temp := '';
 Result := Temp;
 End;
 
-Procedure IncreaseHashSeed();
+function IncreaseHashSeed(Seed:string):string;
 var
   LastChar : integer;
   contador: integer;
 Begin
-LastChar := Ord(MinerSeed[9])+1;
-MinerSeed[9] := chr(LastChar);
+LastChar := Ord(Seed[9])+1;
+Seed[9] := chr(LastChar);
 for contador := 9 downto 1 do
    begin
-   if Ord(MinerSeed[contador])>126 then
+   if Ord(Seed[contador])>126 then
       begin
-      MinerSeed[contador] := chr(33);
-      MinerSeed[contador-1] := chr(Ord(MinerSeed[contador-1])+1);
+      Seed[contador] := chr(33);
+      Seed[contador-1] := chr(Ord(Seed[contador-1])+1);
       end;
    end;
+result := StringReplace(seed,'(','~',[rfReplaceAll, rfIgnoreCase])
 End;
 
 Procedure CreatePoolList();
@@ -160,13 +228,11 @@ var
 Begin
 assignfile(archivo,PoolListFilename);
 rewrite(archivo);
-writeln(archivo,'DevNoso 23.95.233.179 8082 UnMaTcHeD');
+writeln(archivo,'DevNoso 23.95.233.179 8084 UnMaTcHeD');
 writeln(archivo,'nosopoolDE 199.247.3.186 8082 nosopoolDE');
 writeln(archivo,'YZpool 81.68.115.175 8082 YZpool');
-writeln(archivo,'sgnosopool sg.nosopool.com 2255 mama2255');
-writeln(archivo,'usnosopool us.nosopool.com 2255 mama2255');
-writeln(archivo,'YZpool2 148.70.153.167 8082 YZpool');
 writeln(archivo,'Hodl 104.168.99.254 8082 Hodler');
+writeln(archivo,'DogFaceDuke noso.dukedog.io 8082 duke');
 closefile(archivo);
 End;
 
@@ -195,7 +261,7 @@ while not eof(archivo) do
       Form1.ComboPool.Items.Add(name);
    end;
 closefile(archivo);
-randompool:=random(length(poolslist));
+randompool:=0;//random(length(poolslist));
 if length(poolslist)> 0 then loadpool(randompool)
 else
    begin
@@ -211,6 +277,17 @@ form1.labelededit1.Text:=poolslist[number].ip;
 form1.labelededit3.Text:=IntToStr(poolslist[number].port);
 form1.labelededit4.Text:=poolslist[number].pass;
 End;
+
+Procedure ResetData();
+Begin
+Velocidad := 0;
+Balance := 0;
+PoolHashRate := 0;
+lastpago := 0;
+esteintervalo := 0;
+Lastintervalo := 0;
+End;
+
 
 // ***MATHS***
 
@@ -291,6 +368,51 @@ for count := 1+movepos to length(numero) do
    end;
 if result = '' then result := '0';
 if ((movepos=1) and (result <>'0')) then result := '-'+result;
+End;
+
+// *** NEW FUNCTIONS ***
+
+Procedure ResetThreads();
+var
+  counter : integer;
+Begin
+for counter := 0 to Maxcpu-1 do
+   begin
+   ArrMinerNums[counter].seed := MinerPrefix;
+   ArrMinerNums[counter].number := 100000000+counter;
+   ArrMinerNums[counter].increases:=0;
+   end;
+SetLength(ArrNext,0);
+Velocidad := 0;
+TotalHashes := 0;
+Esteintervalo := 0;
+Lastintervalo := 0;
+BlockSeconds := GetTime;
+End;
+
+Procedure UpdateMinerNums();
+var
+  counter : integer;
+Begin
+for counter := 0 to Maxcpu-1 do
+   begin
+   Form1.GridCores.Cells[0,counter+1]:= ArrMinerNums[counter].seed;
+   Form1.GridCores.Cells[1,counter+1]:= IntToStr(ArrMinerNums[counter].number);
+   end;
+End;
+
+function GetMaximunCore():int64;
+var
+  counter : integer;
+  Thiscore : int64;
+Begin
+result := 0;
+for counter := 0 to Cpusforminning-1 do
+   begin
+   thiscore := (ArrMinerNums[counter].increases*900000000)+(ArrMinerNums[counter].number-100000000);
+   if thiscore > result then
+      result := thiscore;
+   end;
 End;
 
 END.
