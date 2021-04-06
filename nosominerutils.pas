@@ -37,6 +37,7 @@ function ClearLeadingCeros(numero:string):string;
 Procedure ResetThreads();
 Procedure UpdateMinerNums();
 function GetMaximunCore():int64;
+function SecondsToTime(seconds:integer):string;
 
 implementation
 
@@ -100,10 +101,10 @@ form1.DataGrid.Cells[1,2]:=IntToStr(foundedsteps);
 form1.DataGrid.Cells[1,3]:=IntToStr(TargetChars);
 form1.DataGrid.Cells[1,4]:=IntToStr(GetTime-LastPingReceived);
 form1.DataGrid.Cells[1,5]:=IntToStr(Length(ArrNext));
-
-if TimeStartMiner>0 then Form1.labeldebug.Caption:=IntToStr(GetTime-TimeStartMiner)+slinebreak
-else Form1.labeldebug.Caption:='0'+slinebreak;
+if TimeStartMiner>0 then Form1.labeldebug.Caption:=SecondsToTime(GetTime-TimeStartMiner)
+else Form1.labeldebug.Caption:='00:00:00';
 Form1.LabelTotal.Caption:=IntToStr(TotalFound);
+Form1.LabelEarned.Caption:=int2curr(Earned);
 End;
 
 Procedure Showinfo(Texto:String);
@@ -413,6 +414,18 @@ for counter := 0 to Cpusforminning-1 do
    if thiscore > result then
       result := thiscore;
    end;
+End;
+
+function SecondsToTime(seconds:integer):string;
+var
+  Thishours,thisminutes,thisseconds,remaining : integer;
+Begin
+thishours := seconds div 3600;
+remaining := seconds mod 3600;
+thisminutes := remaining div 60;
+thisseconds := remaining mod 60;
+result := AddChar('0',IntToStr(Thishours),2)+':'+AddChar('0',IntToStr(thisminutes),2)+
+   ':'+AddChar('0',IntToStr(thisseconds),2);
 End;
 
 END.

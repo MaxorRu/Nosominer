@@ -7,12 +7,16 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls,
   Buttons, Menus, IdTCPClient, IdGlobal, strutils, nosominerutils,
-  lclintf, ComCtrls, Grids, crt;
+  lclintf, ComCtrls, Grids, crt, NosoMinerlanguage;
 
 type
 
   MinerData = packed record
      address : string[35];
+     autocon : boolean;
+     cpus : integer;
+     sound : boolean;
+     language : integer;
      end;
 
   PoolData = Packed record
@@ -42,6 +46,12 @@ type
     procedure Execute; override;
   end;
 
+  TCredentials = Packed record
+     ip : string[15];
+     Port : integer;
+     pass : string[20];
+     end;
+
   { TForm1 }
 
   TForm1 = class(TForm)
@@ -50,6 +60,8 @@ type
     Button1: TButton;
     CheckBox1: TCheckBox;
     CheckBox2: TCheckBox;
+    CheckBox3: TCheckBox;
+    CheckBoxMode: TCheckBox;
     ComboBox1: TComboBox;
     ComboPool: TComboBox;
     Edit1: TEdit;
@@ -58,6 +70,7 @@ type
     Label1: TLabel;
     Label2: TLabel;
     Label3: TLabel;
+    LabelEarned: TLabel;
     labvelocidad: TLabel;
     LabelTotal: TLabel;
     labeldebug: TLabel;
@@ -72,10 +85,17 @@ type
     MainMenu1: TMainMenu;
     Memo1: TMemo;
     MenuItem1: TMenuItem;
+    MenuItem10: TMenuItem;
+    MenuItem11: TMenuItem;
+    MenuItem12: TMenuItem;
     MenuItem2: TMenuItem;
     MenuItem3: TMenuItem;
     MenuItem4: TMenuItem;
     MenuItem5: TMenuItem;
+    MenuItem6: TMenuItem;
+    MenuItem7: TMenuItem;
+    MenuItem8: TMenuItem;
+    MenuItem9: TMenuItem;
     PanelData: TPanel;
     PanelInfo: TPanel;
     DataGrid: TStringGrid;
@@ -87,17 +107,25 @@ type
     TrayIcon1: TTrayIcon;
     procedure BitBtn1Click(Sender: TObject);
     procedure BitBtn2Click(Sender: TObject);
-    procedure Button1Click(Sender: TObject);
+    procedure CheckBox2Change(Sender: TObject);
+    procedure CheckBox3Change(Sender: TObject);
+    procedure CheckBoxModeChange(Sender: TObject);
     procedure ComboBox1Change(Sender: TObject);
     procedure ComboPoolChange(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: boolean);
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormWindowStateChange(Sender: TObject);
+    procedure MenuItem10Click(Sender: TObject);
+    procedure MenuItem11Click(Sender: TObject);
+    procedure MenuItem12Click(Sender: TObject);
     procedure MenuItem2Click(Sender: TObject);
     procedure MenuItem3Click(Sender: TObject);
     procedure MenuItem4Click(Sender: TObject);
     procedure MenuItem5Click(Sender: TObject);
+    procedure MenuItem7Click(Sender: TObject);
+    procedure MenuItem8Click(Sender: TObject);
+    procedure MenuItem9Click(Sender: TObject);
     procedure TimerLatidoTimer(Sender: TObject);
     procedure TimerClearInfoTimer(Sender: TObject);
     procedure TimerReconTimer(Sender: TObject);
@@ -129,16 +157,15 @@ Procedure ProcessThisLine(Linea:string);
 Procedure ReadDataFromLine(Linea:string);
 
 Const
-  DataFileName = 'minerdata.dat';
+  DataFileName = 'config.txt';
   PoolListFilename = 'poollist.txt';
-  minerversion = '1.63';
+  minerversion = '1.64';
   B58Alphabet : string = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
   OfficialRelease = true;
 
 var
   Form1: TForm1;
   UserData :MinerData;                    // Data stored of the miner
-  Datafile : file of MinerData;           // file with the data
   MaxCPU : integer;                       // maximun number of cpus allowed
   CanalPool : TIdTCPClient;               // the channel to connect with the server
   balance : int64 = 0;                    // the user balance in th the pool
@@ -163,6 +190,10 @@ var
   PoolHashRate : int64 = 0;
   PaymentRequested : boolean = false;
   PoolsList : array of pooldata;
+  ConData : TCredentials;
+  Earned : int64 = 0;
+  LangLine : TStringList;
+  CurrLang : integer = 0;
 
   Lastpingsend : int64 = 0;
   Lastpingreceived : int64 = 0;
@@ -179,10 +210,11 @@ var
 
   MinerAddress : String = '';
   MinerPrefix : String = '';
-  PoolPassword : String = '';
 
-  Reconnecting : boolean = true;
+  Reconnecting : boolean = false;
   ReconTime : Integer = 5;
+
+  Launching : boolean = true;
 
 
 implementation
@@ -198,19 +230,16 @@ procedure TForm1.FormCreate(Sender: TObject);
 var
   contador : integer;
 begin
-form1.Caption:='Noso Miner '+minerversion;
+LangLine := TstringList.Create;
 PanelData.Top:=68;
+CanalPool := TIdTCPClient.Create(form1);
+ProcessLines := TStringList.Create;
 TimerRecon.Enabled:=false;
 TimerClearInfo.Enabled:=false;
-if officialrelease then
-   begin
-   form1.Height:=207;
-   form1.Width:=324;
-   end;
+form1.Height:=207;
+form1.Width:=324;
 if not fileexists(PoolListFilename) then CreatePoolList;
 LoadPoolList;
-label2.Caption:='';
-label3.Caption:='0 Kh';
 if GetEnvironmentVariable('NUMBER_OF_PROCESSORS') = '' then MaxCPU := 1
 else MaxCPU := StrToInt(GetEnvironmentVariable('NUMBER_OF_PROCESSORS'));
 setlength(MinerThreads,MaxCPU);
@@ -218,10 +247,14 @@ setlength(ArrMinerNums,MaxCPU);
 GridCores.RowCount:=MaxCPU+1;
 for contador := 1 to MaxCPU do
    ComboBox1.Items.Add(IntToStr(contador));
-ComboBox1.ItemIndex:=combobox1.Items.Count-1;
-if not fileexists(DataFileName) then CreateDataFile() else LoadDataFile();
-CanalPool := TIdTCPClient.Create(form1);
-ProcessLines := TStringList.Create;
+if fileexists(DataFileName) then LoadDataFile() else CreateDataFile();
+LoadLanguage(userdata.language);
+form1.Caption:=LangLine[0]+minerversion;
+label3.Caption:=langLine[1];
+ComboBox1.ItemIndex:=Userdata.cpus-1;
+checkbox3.Checked:=userdata.autocon;
+checkbox2.Checked:=userdata.sound;
+Launching := false;
 end;
 
 procedure TForm1.FormShow(Sender: TObject);
@@ -233,12 +266,13 @@ if FirstShow then
    TimerLatido.Enabled:=true;
    end;
 FirstShow := false;
+if userdata.autocon then LaunchReconnection();
 end;
 
 // CLOSE QUERY
 procedure TForm1.FormCloseQuery(Sender: TObject; var CanClose: boolean);
 begin
-showinfo('Closing');
+showinfo(LangLine[2]);
 Mineron := false;
 sleep(100);
 application.Terminate;
@@ -307,7 +341,7 @@ Procedure VerifyNext();
 var
   counter : integer;
   Deleted : boolean = false;
-  ValidFound: boolean = false;
+  //ValidFound: boolean = false;
 Begin
 if length(arrnext)>0 then
    begin
@@ -320,11 +354,11 @@ if length(arrnext)>0 then
          ProcessLines.Add('MYSTEP '+arrnext[counter].seed+IntToStr(arrnext[counter].number));
          delete(ArrNext,counter,1);
          Deleted := true;
-         ValidFound := true;
+         //ValidFound := true;
          end;
       if not deleted then counter +=1;
       end;
-   if validfound then ShowInfo('VALID NEXT STEP SENT');
+   //if validfound then ShowInfo('VALID NEXT STEP SENT');
    end;
 End;
 
@@ -335,34 +369,67 @@ End;
 // CREATE
 Procedure CreateDataFile();
 var
-  dato: MinerData;
+  thisfile: textfile;
 Begin
-assignfile(datafile,Datafilename);
-rewrite(datafile);
-dato.address:='';
-UserData := dato;
-write(datafile,dato);
-closefile(datafile);
+assignfile(thisfile,Datafilename);
+rewrite(thisfile);
+writeln(thisfile,'address ');
+writeln(thisfile,'autocon false');
+writeln(thisfile,'cpus 1');
+writeln(thisfile,'sound false');
+writeln(thisfile,'lang 0');
+writeln(thisfile,'condata ');
+closefile(thisfile);
+userdata.address:='';
+userdata.autocon:=false;
+userdata.cpus:=1;
+userdata.sound:=false;
+userdata.language:=0;
 End;
 
 // LOAD
 Procedure LoadDataFile();
+var
+  thisfile: textfile;
+  linea : string;
 Begin
-assignfile(datafile,Datafilename);
-reset(datafile);
-read(datafile,UserData);
-closefile(datafile);
+assignfile(thisfile,Datafilename);
+reset(thisfile);
+while not eof(thisfile) do
+   begin
+   readln(thisfile,linea);
+   if parameter(linea,0) = 'address' then userdata.address := parameter(linea,1);
+   if parameter(linea,0) = 'autocon' then userdata.autocon := StrToBoolDef(parameter(linea,1),false);
+   if parameter(linea,0) = 'cpus' then userdata.cpus := StrToIntDef(parameter(linea,1),1);
+   if parameter(linea,0) = 'sound' then userdata.sound := StrToBooldef(parameter(linea,1),false);
+   if parameter(linea,0) = 'lang' then userdata.language := StrToIntDef(parameter(linea,1),0);
+   if parameter(linea,0) = 'condata' then
+      begin
+      form1.LabeledEdit1.Text:=parameter(linea,1);
+      form1.LabeledEdit3.Text:=parameter(linea,2);
+      form1.LabeledEdit4.Text:=parameter(linea,3);
+      end;
+   end;
+closefile(thisfile);
 form1.LabeledEdit2.Text:=userdata.address;
+form1.ComboBox1.ItemIndex:=userdata.cpus-1;
+form1.CheckBox2.Checked:=userdata.sound;
 End;
 
 // SAVE
 Procedure SaveDataFile();
+var
+  thisfile: textfile;
 Begin
-userdata.address:=form1.LabeledEdit2.Text;
-assignfile(datafile,Datafilename);
-rewrite(datafile);
-write(datafile,UserData);
-closefile(datafile);
+assignfile(thisfile,Datafilename);
+rewrite(thisfile);
+writeln(thisfile,'address '+userdata.address);
+writeln(thisfile,'autocon '+booltostr(form1.CheckBox3.Checked));
+writeln(thisfile,'cpus '+IntToStr(form1.ComboBox1.ItemIndex+1));
+writeln(thisfile,'sound '+booltostr(form1.CheckBox2.Checked));
+writeln(thisfile,'lang '+IntToStr(userdata.language));
+writeln(thisfile,'condata '+form1.LabeledEdit1.Text+' '+form1.LabeledEdit3.Text+' '+form1.LabeledEdit4.Text);
+closefile(thisfile);
 End;
 
 // ***************
@@ -384,16 +451,54 @@ end;
 // MAIN MENU : HELP
 procedure TForm1.MenuItem4Click(Sender: TObject);
 begin
-OpenDocument('https://nosocoin.blogspot.com/2021/03/nosominer-faq.html');
+OpenDocument('http://nosocoin.com/NOSOMINER-FAQ.html');
 end;
 
 // MAIN MENU : CLOSE
 procedure TForm1.MenuItem5Click(Sender: TObject);
 begin
-showinfo('Closing');
+showinfo(LangLine[2]);
 Mineron := false;
 sleep(100);
 application.Terminate;
+end;
+
+// MAIN MENU : ENGLISH
+procedure TForm1.MenuItem7Click(Sender: TObject);
+begin
+if CurrLAng <> 0 then LoadLanguage(0);
+SaveDataFile();
+end;
+
+// MAIN MENU : ESPAÑOL
+procedure TForm1.MenuItem8Click(Sender: TObject);
+begin
+if CurrLAng <> 1 then LoadLanguage(1);
+SaveDataFile();
+end;
+
+procedure TForm1.MenuItem9Click(Sender: TObject);
+begin
+if CurrLAng <> 2 then LoadLanguage(2);
+SaveDataFile();
+end;
+
+procedure TForm1.MenuItem10Click(Sender: TObject);
+begin
+if CurrLAng <> 3 then LoadLanguage(3);
+SaveDataFile();
+end;
+
+procedure TForm1.MenuItem11Click(Sender: TObject);
+begin
+if CurrLAng <> 4 then LoadLanguage(4);
+SaveDataFile();
+end;
+
+procedure TForm1.MenuItem12Click(Sender: TObject);
+begin
+if CurrLAng <> 5 then LoadLanguage(5);
+SaveDataFile();
 end;
 
 // **************
@@ -441,8 +546,6 @@ if processlines.Count>0 then
    ProcessThisLine(Processlines[0]);
    Processlines.Delete(0);
    end;
-form1.TrayIcon1.Hint:='Not minning';
-label2.Hint:='Blocks until pool payment';
 if mineron then
    begin
    //if not canalpool.Connected then ConnectPoolClient();
@@ -450,7 +553,7 @@ if mineron then
    LastIntervalo := (GetTime-BlockSeconds)+1;
    velocidad :=  esteintervalo div LastIntervalo;
    Labvelocidad.Caption:=ShowHashrate(esteintervalo)+slinebreak+inttostr(lastintervalo)+' s';
-   if not officialrelease then UpdateMinerNums;
+   if form1.checkboxMode.Checked then UpdateMinerNums;
    if lastpingsend+5<GetTime then
       begin
       LastPingSend := GetTime;
@@ -465,8 +568,13 @@ if mineron then
    form1.Label5.Caption:= MinerPrefix+slinebreak+copy(MinerAddress,1,6)+'...';
    form1.Label6.Caption:=ShowHashrate(poolhashrate);
    if form1.TrayIcon1.Visible then
-      form1.TrayIcon1.Hint:='Minning power: '+IntToStr(velocidad)+' Kh';
-   if lastpago > 0 then label2.Hint:='Your payment will be send as soon as you earn something';
+      form1.TrayIcon1.Hint:=LangLine[63]+IntToStr(velocidad)+' Kh';
+   if lastpago > 0 then label2.Hint:=LangLine[62];
+   end
+else                         // NOT MINERON
+   begin
+   form1.TrayIcon1.Hint:=LangLine[3];
+   label2.Hint:=LangLine[4];
    end;
 if lastpago<=0 then
    begin
@@ -478,7 +586,7 @@ else
    if ((not PaymentRequested) and (balance>0) and (PoolRequestPayment)) then
       begin
       PaymentRequested := true;
-      label2.Caption := 'Wait';
+      label2.Caption := LangLine[5];
       end;
    end;
 TextBalance.Caption:= Int2Curr(balance);
@@ -511,7 +619,7 @@ ReconTime := ReconTime-1;
 if ((ReconTime = 0) and (Reconnecting)) then form1.BitBtn1Click(BitBtn1)
 else
   begin
-  form1.Memo1.Lines.Add('Reconnecting in '+IntToStr(ReconTime)+' seconds');
+  form1.Memo1.Lines.Add(LangLine[6]+IntToStr(ReconTime)+LangLine[7]);
   TimerRecon.Enabled:=true;
   end;
 end;
@@ -528,7 +636,7 @@ if lastblock <> TargetBlock then
 lastblock := TargetBlock;
 UpdateDataGrid();
 Cpusforminning := form1.ComboBox1.ItemIndex+1;
-form1.memo1.Lines.Add('Starting '+inttoStr(Cpusforminning)+' cores');
+form1.memo1.Lines.Add(LangLine[8]+inttoStr(Cpusforminning)+LangLine[9]);
 form1.combobox1.Enabled:=false;
 for TCounter := 0 to Cpusforminning-1 do
    begin
@@ -606,27 +714,29 @@ if lastbuttonclick = GetTime then exit;
 lastbuttonclick := GetTime;
 LockControls;
 userdata.address:=labelededit2.Text;
-PoolPassword := poolslist[ComboPool.ItemIndex].pass;
+condata.ip := labelededit1.Text;
+condata.port := StrToIntDef(labelededit3.Text,8082);
+condata.pass:= labelededit4.Text;
 if length(userdata.address)<5 then
    begin
-   showinfo('Invalid address');
+   showinfo(LangLine[10]);
    UnlockCOntrols;
    exit;
    end;
 Connectionvalue := ConnectPoolClient();
 if Connectionvalue = 0 then
    begin
-   showinfo('Unable to connect');
+   showinfo(LangLine[11]);
    if checkbox2.Checked then PlayBeep;
    UnlockCOntrols;
    if reconnecting then LaunchReconnection();
    end
 else if Connectionvalue = 10 then
    begin
-   Showinfo('Connected');
+   Showinfo(LangLine[12]);
    TimeStartMiner := GetTime;
-   SendPoolMessage(PoolPassword+' '+userdata.address+' JOIN '+MinerVersion);
-   Showinfo('Join pool request sent');
+   SendPoolMessage(condata.pass+' '+userdata.address+' JOIN '+MinerVersion);
+   Showinfo(LangLine[13]);
    Waitingforjoin := 5000;
    end
 End;
@@ -634,15 +744,33 @@ End;
 procedure TForm1.BitBtn2Click(Sender: TObject);
 begin
 if not reconnecting then TimeStartMiner := 0;
+Reconnecting := false;
 StopMiner();
 end;
 
-// TEST BUTTON
-procedure TForm1.Button1Click(Sender: TObject);
+procedure TForm1.CheckBox2Change(Sender: TObject);
 begin
-mineron := false;
-delay(100);
-mineron := true;
+if not Launching then SaveDatafile();
+end;
+
+procedure TForm1.CheckBox3Change(Sender: TObject);
+begin
+if not Launching then SaveDatafile();
+end;
+
+// Change showmode
+procedure TForm1.CheckBoxModeChange(Sender: TObject);
+begin
+if checkboxmode.Checked then
+   begin
+   form1.Width:=555;
+   form1.Height:=500;
+   end
+else
+   begin
+   form1.Height:=207;
+   form1.Width:=324;
+   end;
 end;
 
 // CLIENTE
@@ -651,8 +779,8 @@ function ConnectPoolClient():Integer;
 Begin
 result := 0;
 if canalpool.Connected then exit;
-CanalPool.Host:=poolslist[form1.ComboPool.ItemIndex].ip;
-CanalPool.Port:=poolslist[form1.ComboPool.ItemIndex].port;
+CanalPool.Host:=condata.ip;
+CanalPool.Port:=condata.port;
 canalpool.ConnectTimeout:=2000;
 try
    canalpool.Connect;
@@ -673,7 +801,7 @@ TRY
    canalpool.Disconnect;
 EXCEPT on E:Exception do
    begin
-   Processlines.Add('Error disconnecting pool client: '+E.Message);
+   Processlines.Add(langline[14]+E.Message);
    end;
 END;
 End;
@@ -686,7 +814,7 @@ try
       canalpool.IOHandler.WriteLn(mensaje);
       end;
 Except On E:Exception do
-   Processlines.Add('Error sending message to pool: '+E.Message);
+   Processlines.Add(LangLine[15]+E.Message);
 end;
 End;
 
@@ -695,10 +823,10 @@ Begin
 if not canalpool.Connected then ConnectPoolClient();
 try
    if CanalPool.Connected then
-      SendPoolMessage(PoolPassword+' '+userdata.Address+' STEP '+IntToStr(targetblock)+' '+copy(thisstep,1,9)+' '+copy(thisstep,10,9))
-   else Processlines.Add('Can not send solution to pool');
+      SendPoolMessage(condata.pass+' '+userdata.Address+' STEP '+IntToStr(targetblock)+' '+copy(thisstep,1,9)+' '+copy(thisstep,10,9))
+   else Processlines.Add(LangLine[16]);
 Except On E:Exception do
-   Processlines.Add('Error sending solution: '+E.Message);
+   Processlines.Add(LangLine[17]+E.Message);
 end;
 End;
 
@@ -708,13 +836,13 @@ result := false;
 try
    if CanalPool.Connected then
       begin
-      SendPoolMessage(PoolPassword+' '+userdata.address+' PAYMENT');
-      Processlines.Add('Payment request sent');
+      SendPoolMessage(condata.pass+' '+userdata.address+' PAYMENT');
+      Processlines.Add(LangLine[18]);
       result:= true;
       end
-   else Processlines.Add('Pool server is not connected');
+   else Processlines.Add(LangLine[19]);
 Except On E:Exception do
-   Processlines.Add('Pool payment request error');
+   Processlines.Add(LangLine[20]);
 end;
 End;
 
@@ -723,11 +851,11 @@ Begin
 try
    if CanalPool.Connected then
       begin
-      SendPoolMessage(PoolPassword+' '+userdata.address+' PING '+IntToStr(Velocidad));
+      SendPoolMessage(condata.pass+' '+userdata.address+' PING '+IntToStr(Velocidad));
       end
-   else Processlines.Add('Pool server is not connected');
+   else Processlines.Add(LangLine[19]);
 Except On E:Exception do
-   Processlines.Add('Pool ping sent error');
+   Processlines.Add(LangLine[21]);
 end;
 End;
 
@@ -772,8 +900,9 @@ try
       end;
 Except On E:Exception do
    begin
-   ProcessLines.Add('Error receinving pool info');
-   DisconnectPoolClient();
+   Reading := false;
+   Form1.BitBtn2Click(Form1.BitBtn2);
+   LaunchReconnection();
    end;
 end;
 Reading := false;
@@ -781,13 +910,13 @@ End;
 
 Procedure ProcessThisLine(Linea:string);
 Begin
-form1.Memo1.Lines.Add('>>'+linea);
+if form1.checkboxMode.Checked then form1.Memo1.Lines.Add('>>'+linea);
 if parameter(linea,0) = 'JOINOK' then
    begin
    Waitingforjoin:=0;
    form1.edit1.text:=parameter(linea,1);
    form1.edit2.text:=parameter(linea,2);
-   showinfo('Joined the pool!');
+   showinfo(LangLine[22]);
    SaveDataFile;
    MinerAddress := parameter(linea,1);
    MinerPrefix := parameter(linea,2);
@@ -801,18 +930,19 @@ else if parameter(linea,0) = 'PONG' then
    end
 else if parameter(linea,0) = 'JOINFAILED' then
    begin
-   Showinfo('Probably this pool is full.');
+   Showinfo(LangLine[23]);
    UnLockControls;
    if reconnecting then LaunchReconnection();
    end
 else if parameter(linea,0) = 'PAYMENTOK' then
    begin
-   showinfo( 'Payment: '+Int2curr(StrToInt64Def(Parameter(linea,1),0)) );
+   showinfo( LangLine[24]+Int2curr(StrToInt64Def(Parameter(linea,1),0)) );
+   earned := earned+StrToInt64Def(Parameter(linea,1),0);
    PaymentRequested := false;
    end
 else if parameter(linea,0) = 'PASSFAILED' then
    begin
-   ShowInfo('Wrong pool password');
+   ShowInfo(LangLine[25]);
    UnLockControls;
    if reconnecting then LaunchReconnection();
    end
@@ -831,13 +961,13 @@ else if parameter(linea,0) = 'PAYMENTFAIL' then
    end
 else if parameter(linea,0) = 'INVALIDADDRESS' then
    begin
-   ShowInfo('Your address is not valid');
+   ShowInfo(LangLine[64]);
    UnLockControls;
    if reconnecting then LaunchReconnection();
    end
 else if parameter(linea,0) = 'ALREADYCONNECTED' then
    begin
-   ShowInfo('Already connected to this pool');
+   ShowInfo(LangLine[26]);
    UnLockControls;
    if reconnecting then LaunchReconnection();
    end
