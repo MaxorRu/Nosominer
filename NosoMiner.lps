@@ -8,9 +8,11 @@
       <Unit0>
         <Filename Value="NosoMiner.lpr"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="-1"/>
-        <CursorPos X="67" Y="10"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="1"/>
+        <CursorPos X="11" Y="8"/>
         <UsageCount Value="200"/>
+        <Loaded Value="True"/>
       </Unit0>
       <Unit1>
         <Filename Value="nosominerunit.pas"/>
@@ -29,7 +31,7 @@
       <Unit2>
         <Filename Value="nosominerutils.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="1"/>
+        <EditorIndex Value="2"/>
         <TopLine Value="67"/>
         <CursorPos X="6" Y="47"/>
         <UsageCount Value="177"/>
@@ -47,9 +49,8 @@
         <Filename Value="nosominerlanguage.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="NosoMinerlanguage"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="2"/>
-        <TopLine Value="551"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="550"/>
         <CursorPos X="58" Y="146"/>
         <UsageCount Value="37"/>
         <Loaded Value="True"/>
