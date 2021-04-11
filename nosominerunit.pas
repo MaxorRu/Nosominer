@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls,
   Buttons, Menus, IdTCPClient, IdGlobal, strutils, nosominerutils,
-  lclintf, ComCtrls, Grids, crt, NosoMinerlanguage;
+  lclintf, ComCtrls, Grids, crt, NosoMinerlanguage, UTF8Process;
 
 type
 
@@ -244,6 +244,9 @@ if not fileexists(PoolListFilename) then CreatePoolList;
 LoadPoolList;
 if GetEnvironmentVariable('NUMBER_OF_PROCESSORS') = '' then MaxCPU := 1
 else MaxCPU := StrToInt(GetEnvironmentVariable('NUMBER_OF_PROCESSORS'));
+{$IFDEF UNIX}
+MaxCPU := GetSystemThreadCount;
+{$ENDIF}
 setlength(MinerThreads,MaxCPU);
 setlength(ArrMinerNums,MaxCPU);
 GridCores.RowCount:=MaxCPU+1;

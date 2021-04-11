@@ -8,9 +8,8 @@
       <Unit0>
         <Filename Value="NosoMiner.lpr"/>
         <IsPartOfProject Value="True"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
-        <CursorPos X="11" Y="8"/>
+        <CursorPos X="3" Y="6"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
       </Unit0>
@@ -21,9 +20,10 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="NosoMinerUnit"/>
-        <TopLine Value="461"/>
-        <CursorPos X="26" Y="502"/>
-        <FoldState Value=" T3nU030A522r"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="229"/>
+        <CursorPos X="32" Y="248"/>
+        <FoldState Value=" T3nX030A522@"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -34,7 +34,7 @@
         <EditorIndex Value="2"/>
         <TopLine Value="67"/>
         <CursorPos X="6" Y="47"/>
-        <UsageCount Value="177"/>
+        <UsageCount Value="178"/>
         <Loaded Value="True"/>
       </Unit2>
       <Unit3>
@@ -42,7 +42,7 @@
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="19" Y="3"/>
-        <UsageCount Value="87"/>
+        <UsageCount Value="88"/>
         <DefaultSyntaxHighlighter Value="None"/>
       </Unit3>
       <Unit4>
@@ -52,7 +52,7 @@
         <EditorIndex Value="3"/>
         <TopLine Value="550"/>
         <CursorPos X="58" Y="146"/>
-        <UsageCount Value="37"/>
+        <UsageCount Value="38"/>
         <Loaded Value="True"/>
       </Unit4>
     </Units>
