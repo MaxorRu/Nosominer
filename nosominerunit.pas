@@ -88,6 +88,7 @@ type
     MenuItem10: TMenuItem;
     MenuItem11: TMenuItem;
     MenuItem12: TMenuItem;
+    MenuItem13: TMenuItem;
     MenuItem2: TMenuItem;
     MenuItem3: TMenuItem;
     MenuItem4: TMenuItem;
@@ -119,6 +120,7 @@ type
     procedure MenuItem10Click(Sender: TObject);
     procedure MenuItem11Click(Sender: TObject);
     procedure MenuItem12Click(Sender: TObject);
+    procedure MenuItem13Click(Sender: TObject);
     procedure MenuItem2Click(Sender: TObject);
     procedure MenuItem3Click(Sender: TObject);
     procedure MenuItem4Click(Sender: TObject);
@@ -159,7 +161,7 @@ Procedure ReadDataFromLine(Linea:string);
 Const
   DataFileName = 'config.txt';
   PoolListFilename = 'poollist.txt';
-  minerversion = '1.64';
+  minerversion = '1.65';
   B58Alphabet : string = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
   OfficialRelease = true;
 
@@ -262,7 +264,6 @@ begin
 if FirstShow then
    begin
    Paneldata.Visible:=false;
-   //showmessage('You can support the development of the Noso project (wallet, webpage and miner) joining the DevNoso pool');
    TimerLatido.Enabled:=true;
    end;
 FirstShow := false;
@@ -321,6 +322,8 @@ Repeat
    Solucion := Sha256(Mseed+MinerAddress+Mnumber);
    if (AnsiContainsStr(Solucion,copy(TargetString,1,Targetchars))) then
       ProcessLines.Add('MYSTEP '+Mseed+Mnumber);
+   if (AnsiContainsStr(Solucion,copy(TargetString,1,Targetchars-1))) then
+      AddNextStep(Mseed,StrToInt(Mnumber),Targetchars-1);
    TNumber := TNumber+Cpusforminning;
 until Not Mineron;
 end;
@@ -340,26 +343,20 @@ End;
 Procedure VerifyNext();
 var
   counter : integer;
-  Deleted : boolean = false;
-  //ValidFound: boolean = false;
+  founded : boolean = false;
 Begin
 if length(arrnext)>0 then
    begin
-   Counter := 0;
-   While counter < length(arrnext)-1 do
+   for counter := 0 to length(arrnext)-1 do
       begin
-      deleted := false;
       if arrnext[counter].Chars = Targetchars then
          begin
          ProcessLines.Add('MYSTEP '+arrnext[counter].seed+IntToStr(arrnext[counter].number));
-         delete(ArrNext,counter,1);
-         Deleted := true;
-         //ValidFound := true;
+         founded := true;
          end;
-      if not deleted then counter +=1;
       end;
-   //if validfound then ShowInfo('VALID NEXT STEP SENT');
    end;
+if founded then Setlength(arrnext,0);
 End;
 
 // ***************
@@ -501,6 +498,12 @@ if CurrLAng <> 5 then LoadLanguage(5);
 SaveDataFile();
 end;
 
+procedure TForm1.MenuItem13Click(Sender: TObject);
+begin
+if CurrLAng <> 6 then LoadLanguage(6);
+SaveDataFile();
+end;
+
 // **************
 // ***TRAYICON***
 // **************
@@ -551,7 +554,7 @@ if mineron then
    //if not canalpool.Connected then ConnectPoolClient();
    esteintervalo := GetMaximunCore div 1000;
    LastIntervalo := (GetTime-BlockSeconds)+1;
-   velocidad :=  esteintervalo div LastIntervalo;
+   velocidad :=  (esteintervalo div LastIntervalo) * 2;
    Labvelocidad.Caption:=ShowHashrate(esteintervalo)+slinebreak+inttostr(lastintervalo)+' s';
    if form1.checkboxMode.Checked then UpdateMinerNums;
    if lastpingsend+5<GetTime then
@@ -952,8 +955,9 @@ else if parameter(linea,0) = 'POOLSTEPS' then
    if foundedsteps = 0 then
       begin
       StartMiners();
+      Setlength(arrnext,0)
       end
-   //else VerifyNext();
+   else VerifyNext();
    end
 else if parameter(linea,0) = 'PAYMENTFAIL' then
    begin

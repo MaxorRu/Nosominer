@@ -14,6 +14,7 @@ Procedure LangChinese();
 Procedure LangFrench();
 Procedure LangGerman();
 Procedure LangDanish();
+Procedure LangIndonesian();
 
 implementation
 
@@ -72,6 +73,7 @@ else if number = 2 then LangChinese()
 else if number = 3 then LangFrench()
 else if number = 4 then LangGerman()
 else if number = 5 then LangDanish()
+else if number = 6 then LangIndonesian();
 ;
 ShowLanguage();
 userdata.language:=number;
@@ -507,6 +509,78 @@ LangLine.Add('Din betaling bliver sent så snart at du tjener noget');
 LangLine.Add('Minedrifts kraft: ');
 LangLine.Add('Din adresse er ikke gyldig');
 LangLine.Add('Details');                        //65
+End;
+
+Procedure LangIndonesian();
+Begin
+Langline.Clear;
+CurrLAng := 6;
+LangLine.Add('Penambang Noso ');                            //0
+LangLine.Add('0 Kh');                                  // DO NOT TRANSLATE THIS
+LangLine.Add('Penutupan');
+LangLine.Add('Tidak menambang');
+LangLine.Add('Blokir sampai pembayaran dari kolam');
+LangLine.Add('Tunggu');                                  //5
+LangLine.Add('Menghubungkan kembali dalam ');
+LangLine.Add(' detik');
+LangLine.Add('Memulai ');
+LangLine.Add(' inti');
+LangLine.Add('Alamat tidak valid');                       //10
+LangLine.Add('Tidak dapat terhubung');
+LangLine.Add('Terhubung');
+LangLine.Add('Bergabung dengan kolam telah di kirim');
+LangLine.Add('Terjadi kesalahan saat memutuskan klien kolam: ');
+LangLine.Add('Terjadi kesalahan saat mengirim pesan ke kolam: ');       //15
+LangLine.Add('Tidak dapat mengirim solusi ke kolam');
+LangLine.Add('Kesalahan mengirim solusi: ');
+LangLine.Add('Permintaan pembayaran dikirim');
+LangLine.Add('Server kolam tidak terhubung');
+LangLine.Add('Kesalahan permintaan pembayaran kolam');            //20
+LangLine.Add('Kesalahan mengirim ping kolam');
+LangLine.Add('Bergabung dengan kolam!');
+LangLine.Add('Mungkin kolam ini sudah penuh');
+LangLine.Add('Pembayaran: ');
+LangLine.Add('Kata sandi kolam salah');                   //25
+LangLine.Add('Sudah terhubung ke kolam ini');
+LangLine.Add('Saldo kolam');
+LangLine.Add('Hashrate kolam');
+LangLine.Add('Kekuatan hash Anda');
+LangLine.Add('Data penambangan kolam');                      //30
+LangLine.Add('Langkah-langkah ditemukan sesi ini');
+LangLine.Add('Pilih kolam');
+LangLine.Add('IP');
+LangLine.Add('Alamat penambangan Anda');
+LangLine.Add('Alamat');                               //35
+LangLine.Add('Port kolam');
+LangLine.Add('Port');
+LangLine.Add('Kata sandi kolam');
+LangLine.Add('Lulus');
+LangLine.Add('Inti yang akan digunakan untuk menambang');               //40
+LangLine.Add('Inti');
+LangLine.Add('Mulai');
+LangLine.Add('Mulai menambang');
+LangLine.Add('Alamat kolam');
+LangLine.Add('Awalan penambangan');                         //45
+LangLine.Add('Anda terhubung ke kolam');
+LangLine.Add('Minimalkan ke baki');
+LangLine.Add('Peringatan suara');
+LangLine.Add('Berhenti menambang');
+LangLine.Add('Berhenti');                                  //50
+LangLine.Add('Waktu sesi ');
+LangLine.Add('Benih');
+LangLine.Add('Nomor');
+LangLine.Add('Ubah mode tampilan');
+LangLine.Add('Penghasilan sesi ini');                 //55
+LangLine.Add('Bahasa');
+LangLine.Add('Bantuan');
+LangLine.Add('Berhenti');
+LangLine.Add('Fail');
+LangLine.Add('Ke baki');                               //60
+LangLine.Add('Suara');
+LangLine.Add('Pembayaran Anda akan dikirim segera setelah Anda mendapatkan sesuatu');
+LangLine.Add('Kekuatan penambangan: ');
+LangLine.Add('Alamat Anda tidak valid');
+LangLine.Add('Detail');
 End;
 
 END.
