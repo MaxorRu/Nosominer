@@ -242,11 +242,7 @@ form1.Height:=207;
 form1.Width:=324;
 if not fileexists(PoolListFilename) then CreatePoolList;
 LoadPoolList;
-if GetEnvironmentVariable('NUMBER_OF_PROCESSORS') = '' then MaxCPU := 1
-else MaxCPU := StrToInt(GetEnvironmentVariable('NUMBER_OF_PROCESSORS'));
-{$IFDEF UNIX}
-MaxCPU := GetSystemThreadCount;
-{$ENDIF}
+MaxCPU:= {$IFDEF UNIX}GetSystemThreadCount{$ELSE}GetCPUCount{$ENDIF};
 setlength(MinerThreads,MaxCPU);
 setlength(ArrMinerNums,MaxCPU);
 GridCores.RowCount:=MaxCPU+1;

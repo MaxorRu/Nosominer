@@ -22,8 +22,8 @@
         <UnitName Value="NosoMinerUnit"/>
         <IsVisibleTab Value="True"/>
         <TopLine Value="229"/>
-        <CursorPos X="32" Y="248"/>
-        <FoldState Value=" T3nX030A522@"/>
+        <CursorPos X="70" Y="245"/>
+        <FoldState Value=" T3nT030A522;"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -34,7 +34,7 @@
         <EditorIndex Value="2"/>
         <TopLine Value="67"/>
         <CursorPos X="6" Y="47"/>
-        <UsageCount Value="178"/>
+        <UsageCount Value="180"/>
         <Loaded Value="True"/>
       </Unit2>
       <Unit3>
@@ -42,7 +42,7 @@
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="19" Y="3"/>
-        <UsageCount Value="88"/>
+        <UsageCount Value="90"/>
         <DefaultSyntaxHighlighter Value="None"/>
       </Unit3>
       <Unit4>
@@ -52,7 +52,7 @@
         <EditorIndex Value="3"/>
         <TopLine Value="550"/>
         <CursorPos X="58" Y="146"/>
-        <UsageCount Value="38"/>
+        <UsageCount Value="40"/>
         <Loaded Value="True"/>
       </Unit4>
     </Units>
