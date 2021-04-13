@@ -436,7 +436,7 @@ var
   Resultado : string;
   contador : integer;
 Begin
-if TargetBlock < 10000 then result := Sha256(Toalgo)
+if TargetBlock < 100000 then result := Sha256(Toalgo)
 else
    begin
    Resultado := Sha256(Toalgo);

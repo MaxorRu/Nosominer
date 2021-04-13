@@ -161,7 +161,7 @@ Procedure ReadDataFromLine(Linea:string);
 Const
   DataFileName = 'config.txt';
   PoolListFilename = 'poollist.txt';
-  minerversion = '1.65';
+  minerversion = '1.66';
   B58Alphabet : string = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
   B16Alphabet : string = '0123456789ABCDEF';
   OfficialRelease = true;
