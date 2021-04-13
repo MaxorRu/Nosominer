@@ -38,6 +38,8 @@ Procedure ResetThreads();
 Procedure UpdateMinerNums();
 function GetMaximunCore():int64;
 function SecondsToTime(seconds:integer):string;
+Function RunAlgo(Toalgo:String):String;
+function ProcesarAlgo(entrada : string):string;
 
 implementation
 
@@ -214,13 +216,14 @@ LastChar := Ord(Seed[9])+1;
 Seed[9] := chr(LastChar);
 for contador := 9 downto 1 do
    begin
-   if Ord(Seed[contador])>126 then
+   if Ord(Seed[contador])>124 then
       begin
       Seed[contador] := chr(33);
       Seed[contador-1] := chr(Ord(Seed[contador-1])+1);
       end;
    end;
-result := StringReplace(seed,'(','~',[rfReplaceAll, rfIgnoreCase])
+result := StringReplace(seed,'(','~',[rfReplaceAll, rfIgnoreCase]);
+result := StringReplace(seed,'_','}',[rfReplaceAll, rfIgnoreCase]);
 End;
 
 Procedure CreatePoolList();
@@ -426,6 +429,48 @@ thisminutes := remaining div 60;
 thisseconds := remaining mod 60;
 result := AddChar('0',IntToStr(Thishours),2)+':'+AddChar('0',IntToStr(thisminutes),2)+
    ':'+AddChar('0',IntToStr(thisseconds),2);
+End;
+
+Function RunAlgo(Toalgo:String):String;
+var
+  Resultado : string;
+  contador : integer;
+Begin
+if TargetBlock < 10000 then result := Sha256(Toalgo)
+else
+   begin
+   Resultado := Sha256(Toalgo);
+   for contador := 1 to 50 do
+      resultado := ProcesarAlgo(Resultado);
+   result := Sha256(resultado);
+   end;
+End;
+
+function ProcesarAlgo(entrada : string):string;
+var
+  contador : integer;
+  resultado : string = '';
+  chara,charb, charf : integer;
+
+Begin
+for contador := 1 to length(entrada) do
+   begin
+   if contador < Length(entrada) then
+      begin
+      chara := Pos(entrada[contador],B16Alphabet);
+      charb := Pos(entrada[contador+1],B16Alphabet);
+      charf := chara+charb; if charf>15 then charf := charf-16;
+      resultado := resultado+copy(B16Alphabet,charf+1,1);
+      end
+   else
+      begin
+      chara := Pos(entrada[contador],B16Alphabet);
+      charb := Pos(entrada[1],B16Alphabet);
+      charf := chara+charb; if charf>15 then charf := charf-16;
+      resultado := resultado+copy(B16Alphabet,charf+1,1);
+      end;
+   end;
+result := resultado
 End;
 
 END.

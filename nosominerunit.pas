@@ -163,6 +163,7 @@ Const
   PoolListFilename = 'poollist.txt';
   minerversion = '1.65';
   B58Alphabet : string = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+  B16Alphabet : string = '0123456789ABCDEF';
   OfficialRelease = true;
 
 var
@@ -318,7 +319,7 @@ Repeat
    ArrMinerNums[ThreadNumber].seed := TSeed;
    Mseed := TSeed;
    Mnumber := IntToStr(TNumber);
-   Solucion := Sha256(Mseed+MinerAddress+Mnumber);
+   Solucion := RunAlgo(Mseed+MinerAddress+Mnumber);
    if (AnsiContainsStr(Solucion,copy(TargetString,1,Targetchars))) then
       ProcessLines.Add('MYSTEP '+Mseed+Mnumber);
    if (AnsiContainsStr(Solucion,copy(TargetString,1,Targetchars-1))) then
@@ -543,7 +544,7 @@ if Waitingforjoin>0 then
 
       end;
    end;
-if processlines.Count>0 then
+While processlines.Count>0 do
    begin
    ProcessThisLine(Processlines[0]);
    Processlines.Delete(0);
