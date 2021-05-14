@@ -89,6 +89,7 @@ type
     MenuItem11: TMenuItem;
     MenuItem12: TMenuItem;
     MenuItem13: TMenuItem;
+    MenuItem14: TMenuItem;
     MenuItem2: TMenuItem;
     MenuItem3: TMenuItem;
     MenuItem4: TMenuItem;
@@ -121,6 +122,7 @@ type
     procedure MenuItem11Click(Sender: TObject);
     procedure MenuItem12Click(Sender: TObject);
     procedure MenuItem13Click(Sender: TObject);
+    procedure MenuItem14Click(Sender: TObject);
     procedure MenuItem2Click(Sender: TObject);
     procedure MenuItem3Click(Sender: TObject);
     procedure MenuItem4Click(Sender: TObject);
@@ -146,7 +148,7 @@ function ConnectPoolClient():integer;
 Procedure DisconnectPoolClient();
 
 Procedure SendPoolMessage(mensaje:string);
-Procedure SendPoolStep();
+Procedure SendPoolStep(lengthstep:integer);
 function PoolRequestPayment():boolean;
 Procedure SendPoolPing();
 
@@ -161,7 +163,7 @@ Procedure ReadDataFromLine(Linea:string);
 Const
   DataFileName = 'config.txt';
   PoolListFilename = 'poollist.txt';
-  minerversion = '1.66';
+  minerversion = '1.70';
   B58Alphabet : string = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
   B16Alphabet : string = '0123456789ABCDEF';
   OfficialRelease = true;
@@ -218,6 +220,7 @@ var
   ReconTime : Integer = 5;
 
   Launching : boolean = true;
+  PooDeepSteps : integer = 3;
 
 
 implementation
@@ -319,11 +322,15 @@ Repeat
    ArrMinerNums[ThreadNumber].seed := TSeed;
    Mseed := TSeed;
    Mnumber := IntToStr(TNumber);
-   Solucion := RunAlgo(Mseed+MinerAddress+Mnumber);
+   Solucion := Sha256(Mseed+MinerAddress+Mnumber);
    if (AnsiContainsStr(Solucion,copy(TargetString,1,Targetchars))) then
-      ProcessLines.Add('MYSTEP '+Mseed+Mnumber);
-   if (AnsiContainsStr(Solucion,copy(TargetString,1,Targetchars-1))) then
-      AddNextStep(Mseed,StrToInt(Mnumber),Targetchars-1);
+      ProcessLines.Add('MYSTEP '+Mseed+Mnumber)
+   else if (AnsiContainsStr(Solucion,copy(TargetString,1,Targetchars-1))) then
+      ProcessLines.Add('MYSTEP '+Mseed+Mnumber+' '+IntToStr(Targetchars-1))
+   else if (AnsiContainsStr(Solucion,copy(TargetString,1,Targetchars-2))) then
+      ProcessLines.Add('MYSTEP '+Mseed+Mnumber+' '+IntToStr(Targetchars-2))
+   else if (AnsiContainsStr(Solucion,copy(TargetString,1,Targetchars-3))) then
+      ProcessLines.Add('MYSTEP '+Mseed+Mnumber+' '+IntToStr(Targetchars-3));
    TNumber := TNumber+Cpusforminning;
 until Not Mineron;
 end;
@@ -504,6 +511,12 @@ if CurrLAng <> 6 then LoadLanguage(6);
 SaveDataFile();
 end;
 
+procedure TForm1.MenuItem14Click(Sender: TObject);
+begin
+if CurrLAng <> 7 then LoadLanguage(7);
+SaveDataFile();
+end;
+
 // **************
 // ***TRAYICON***
 // **************
@@ -555,7 +568,7 @@ if mineron then
    esteintervalo := GetMaximunCore div 1000;
    LastIntervalo := (GetTime-BlockSeconds)+1;
    velocidad :=  (esteintervalo div LastIntervalo) * 2;
-   Labvelocidad.Caption:=ShowHashrate(esteintervalo)+slinebreak+inttostr(lastintervalo)+' s';
+   Labvelocidad.Caption:=ShowHashrate(velocidad)+slinebreak+inttostr(lastintervalo)+' s';
    if form1.checkboxMode.Checked then UpdateMinerNums;
    if lastpingsend+5<GetTime then
       begin
@@ -641,6 +654,7 @@ UpdateDataGrid();
 Cpusforminning := form1.ComboBox1.ItemIndex+1;
 form1.memo1.Lines.Add(LangLine[8]+inttoStr(Cpusforminning)+LangLine[9]);
 form1.combobox1.Enabled:=false;
+
 for TCounter := 0 to Cpusforminning-1 do
    begin
    MinerThreads[TCounter] := TThreadMiner.Create(true);
@@ -648,6 +662,7 @@ for TCounter := 0 to Cpusforminning-1 do
    MinerThreads[TCounter].Start;
    Delay(25);
    end;
+
 End;
 
 Procedure StopMiner();
@@ -821,12 +836,12 @@ Except On E:Exception do
 end;
 End;
 
-Procedure SendPoolStep();
+Procedure SendPoolStep(lengthstep:integer);
 Begin
-if not canalpool.Connected then ConnectPoolClient();
 try
+if not canalpool.Connected then ConnectPoolClient();
    if CanalPool.Connected then
-      SendPoolMessage(condata.pass+' '+userdata.Address+' STEP '+IntToStr(targetblock)+' '+copy(thisstep,1,9)+' '+copy(thisstep,10,9))
+      SendPoolMessage(condata.pass+' '+userdata.Address+' STEP '+IntToStr(targetblock)+' '+copy(thisstep,1,9)+' '+copy(thisstep,10,9)+' '+IntToStr(lengthstep))
    else Processlines.Add(LangLine[16]);
 Except On E:Exception do
    Processlines.Add(LangLine[17]+E.Message);
@@ -912,6 +927,9 @@ Reading := false;
 End;
 
 Procedure ProcessThisLine(Linea:string);
+var
+  steplength : integer;
+  StepValue : integer;
 Begin
 if form1.checkboxMode.Checked then form1.Memo1.Lines.Add('>>'+linea);
 if parameter(linea,0) = 'JOINOK' then
@@ -978,7 +996,8 @@ else if parameter(linea,0) = 'ALREADYCONNECTED' then
 else if parameter(linea,0) = 'MYSTEP' then
    begin
    ThisStep := Parameter(Linea,1);
-   SendPoolStep();
+   StepLength := StrToIntDef(Parameter(Linea,2),-1);
+   SendPoolStep(StepLength);
    ThisStep := '';
    end
 else if parameter(linea,0) = 'NEXTSTEP' then
@@ -986,7 +1005,8 @@ else if parameter(linea,0) = 'NEXTSTEP' then
    end
 else if parameter(linea,0) = 'STEPOK' then
    begin
-   TotalFound +=1;
+   StepValue := StrToIntDef( parameter(linea,1),1);
+   TotalFound := TotalFound+StepValue;
    PlayBeep;
    end
 else //Showinfo('Unknown messsage from pool server');
@@ -1010,6 +1030,7 @@ TargetDiff := StrToIntDef(Parameter(Nuevalinea,5),0);
 balance := StrToInt64Def(Parameter(Nuevalinea,6),0);
 lastpago := StrToIntDef(Parameter(Nuevalinea,7),0);
 poolhashrate := StrToIntDef(Parameter(Nuevalinea,8),0);
+PooDeepSteps := StrToIntDef(Parameter(Nuevalinea,9),3);
 End;
 
 END. // END APP

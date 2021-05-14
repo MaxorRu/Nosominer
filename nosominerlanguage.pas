@@ -15,6 +15,7 @@ Procedure LangFrench();
 Procedure LangGerman();
 Procedure LangDanish();
 Procedure LangIndonesian();
+Procedure LangRussian();
 
 implementation
 
@@ -73,8 +74,8 @@ else if number = 2 then LangChinese()
 else if number = 3 then LangFrench()
 else if number = 4 then LangGerman()
 else if number = 5 then LangDanish()
-else if number = 6 then LangIndonesian();
-;
+else if number = 6 then LangIndonesian()
+else if number = 7 then LangRussian();
 ShowLanguage();
 userdata.language:=number;
 end;
@@ -580,8 +581,84 @@ LangLine.Add('Suara');
 LangLine.Add('Pembayaran Anda akan dikirim segera setelah Anda mendapatkan sesuatu');
 LangLine.Add('Kekuatan penambangan: ');
 LangLine.Add('Alamat Anda tidak valid');
-LangLine.Add('Detail');
+LangLine.Add('Detail');                                //65
 End;
+
+Procedure LangRussian();
+Begin
+Langline.Clear;
+CurrLAng := 7;
+LangLine.Add('Noso Майнер ');                            //0
+LangLine.Add('0 Kh');                                  // DO NOT TRANSLATE THIS
+LangLine.Add('Закрытие');
+LangLine.Add('Не майнит');
+LangLine.Add('Блоков до выплаты');
+LangLine.Add('Ждём');                                  //5
+LangLine.Add('Попытка подключения через ');
+LangLine.Add(' сек.');
+LangLine.Add('ЦП (потоков): ');
+LangLine.Add(' задействовано');
+LangLine.Add('Неверный адрес');                       //10
+LangLine.Add('Не удалось подключиться');
+LangLine.Add('Подключаемся...');
+LangLine.Add('Запрос на подключение');
+LangLine.Add('Ошибка соединения: ');
+LangLine.Add('Ошибка отправки: ');       //15
+LangLine.Add('Ошибка отправки решения');
+LangLine.Add('Ошибка отправки решения: ');
+LangLine.Add('Отправлен запрос на выплату');
+LangLine.Add('Нет соединения с сервером пула');
+LangLine.Add('Ошибка запроса на выплату');            //20
+LangLine.Add('Не удалось опросить пул (ping)');
+LangLine.Add('Подключились к пулу!');
+LangLine.Add('Достигнут максимум клиентов пула');
+LangLine.Add('Выплата: ');
+LangLine.Add('Некорректный пароль пула');                   //25
+LangLine.Add('Вы уже подключены к этому пулу');
+LangLine.Add('Ваш баланс на пуле');
+LangLine.Add('Хешрейт пула');
+LangLine.Add('Ваш хешрейт');
+LangLine.Add('Данные пула');                      //30
+LangLine.Add('Найдено решений');
+LangLine.Add('Пул');
+LangLine.Add('IP пула');
+LangLine.Add('Адрес кошелька для выплат');
+LangLine.Add('Кошелёк');                               //35
+LangLine.Add('Порт пула');
+LangLine.Add('Порт');
+LangLine.Add('Пароль пула');
+LangLine.Add('Пасс');
+LangLine.Add('Потоки ЦП для работы');               //40
+LangLine.Add('ЦП');
+LangLine.Add('Старт');
+LangLine.Add('Запуск майнинга');
+LangLine.Add('Адрес пула');
+LangLine.Add('Префикс');                         //45
+LangLine.Add('Вы подключены к пулу');
+LangLine.Add('Сворачивать в трей');
+LangLine.Add('Звуковые оповещения');
+LangLine.Add('Завершить работу');
+LangLine.Add('Стоп');                                  //50
+LangLine.Add('Время сессии ');
+LangLine.Add('Сид');
+LangLine.Add('Номер');
+LangLine.Add('Данные майнинга');
+LangLine.Add('Выплачено за сессию');                 //55
+LangLine.Add('Язык');
+LangLine.Add('Помощь');
+LangLine.Add('Выход');
+LangLine.Add('Файл');
+LangLine.Add('В трей');                               //60
+LangLine.Add('Звук');
+LangLine.Add('Выплата произойдёт по окончании периода оплаты ');
+LangLine.Add('Хешрейт: ');
+LangLine.Add('Некорректный адрес');
+LangLine.Add('Данные');                        //65
+End;
+
+
+
+
 
 END.
 

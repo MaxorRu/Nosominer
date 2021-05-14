@@ -2,6 +2,6 @@
 
 Stand alone miner for Noso cryptocurrency
 
-April 6,2021
+May 14,2021
 
-Current version: M1.64
+Current version: M1.70

@@ -5,7 +5,7 @@ unit nosominerutils;
 interface
 
 uses
-  Classes, SysUtils,strutils,DCPsha256;
+  Classes, SysUtils,strutils,DCPsha256, HlpHashFactory;
 
 Type
     DivResult = packed record
@@ -40,6 +40,7 @@ function GetMaximunCore():int64;
 function SecondsToTime(seconds:integer):string;
 Function RunAlgo(Toalgo:String):String;
 function ProcesarAlgo(entrada : string):string;
+function Recursive256(incomingtext:string;step:integer):string;
 
 implementation
 
@@ -222,7 +223,7 @@ for contador := 9 downto 1 do
       Seed[contador-1] := chr(Ord(Seed[contador-1])+1);
       end;
    end;
-result := StringReplace(seed,'(','~',[rfReplaceAll, rfIgnoreCase]);
+seed := StringReplace(seed,'(','~',[rfReplaceAll, rfIgnoreCase]);
 result := StringReplace(seed,'_','}',[rfReplaceAll, rfIgnoreCase]);
 End;
 
@@ -232,11 +233,11 @@ var
 Begin
 assignfile(archivo,PoolListFilename);
 rewrite(archivo);
-writeln(archivo,'DevNoso 23.95.233.179 8084 UnMaTcHeD');
-writeln(archivo,'nosopoolDE 199.247.3.186 8082 nosopoolDE');
+//writeln(archivo,'DevNoso 23.95.233.179 8082 UnMaTcHeD');
+//writeln(archivo,'nosopoolDE 199.247.3.186 8082 nosopoolDE');
 writeln(archivo,'YZpool 81.68.115.175 8082 YZpool');
-writeln(archivo,'Hodl 104.168.99.254 8082 Hodler');
 writeln(archivo,'DogFaceDuke noso.dukedog.io 8082 duke');
+writeln(archivo,'mining.moe Node1.mining.moe 8082 miningmoe');
 closefile(archivo);
 End;
 
@@ -436,14 +437,8 @@ var
   Resultado : string;
   contador : integer;
 Begin
-if TargetBlock < 100000 then result := Sha256(Toalgo)
-else
-   begin
-   Resultado := Sha256(Toalgo);
-   for contador := 1 to 50 do
-      resultado := ProcesarAlgo(Resultado);
-   result := Sha256(resultado);
-   end;
+if TargetBlock < 1 then result := Sha256(Toalgo)
+else result := Recursive256(Toalgo,FoundedSteps+1)
 End;
 
 function ProcesarAlgo(entrada : string):string;
@@ -451,7 +446,6 @@ var
   contador : integer;
   resultado : string = '';
   chara,charb, charf : integer;
-
 Begin
 for contador := 1 to length(entrada) do
    begin
@@ -471,6 +465,35 @@ for contador := 1 to length(entrada) do
       end;
    end;
 result := resultado
+End;
+
+function Recursive256(incomingtext:string;step:integer):string;
+var
+  Resultado : string;
+  contador : integer;
+
+  function ProcesarAlgo(entrada : string):string;
+  var
+    counter : integer;
+    resultado2 : string = '';
+    chara,charb, charf : integer;
+  Begin
+  for counter := 1 to length(entrada) do
+     begin
+     chara := Hex2Dec(entrada[counter]);
+     if counter < Length(entrada) then charb := Hex2Dec(entrada[counter+1])
+     else charb := Hex2Dec(entrada[1]);
+     charf := chara+charb; if charf>15 then charf := charf-16;
+     resultado2 := resultado2+inttohex(charf,1);
+     end;
+  result := resultado
+  End;
+
+Begin
+Resultado := Sha256(incomingtext);
+for contador := 1 to 5 do
+   resultado := ProcesarAlgo(Resultado);
+result := Sha256(resultado);
 End;
 
 END.
