@@ -594,13 +594,13 @@ LangLine.Add('Закрытие');
 LangLine.Add('Не майнит');
 LangLine.Add('Блоков до выплаты');
 LangLine.Add('Ждём');                                  //5
-LangLine.Add('Попытка подключения через ');
-LangLine.Add(' сек.');
-LangLine.Add('ЦП (потоков): ');
-LangLine.Add(' задействовано');
+LangLine.Add('Подключаемся к ');
+LangLine.Add(' секунд');
+LangLine.Add('Запуск ');
+LangLine.Add(' потоков ЦП');
 LangLine.Add('Неверный адрес');                       //10
 LangLine.Add('Не удалось подключиться');
-LangLine.Add('Подключаемся...');
+LangLine.Add('Подключён');
 LangLine.Add('Запрос на подключение');
 LangLine.Add('Ошибка соединения: ');
 LangLine.Add('Ошибка отправки: ');       //15
@@ -615,19 +615,19 @@ LangLine.Add('Достигнут максимум клиентов пула');
 LangLine.Add('Выплата: ');
 LangLine.Add('Некорректный пароль пула');                   //25
 LangLine.Add('Вы уже подключены к этому пулу');
-LangLine.Add('Ваш баланс на пуле');
+LangLine.Add('Баланс пула');
 LangLine.Add('Хешрейт пула');
 LangLine.Add('Ваш хешрейт');
 LangLine.Add('Данные пула');                      //30
-LangLine.Add('Найдено решений');
+LangLine.Add('Найдено за сеанс');
 LangLine.Add('Пул');
 LangLine.Add('IP пула');
-LangLine.Add('Адрес кошелька для выплат');
+LangLine.Add('Адрес кошелька');
 LangLine.Add('Кошелёк');                               //35
 LangLine.Add('Порт пула');
 LangLine.Add('Порт');
 LangLine.Add('Пароль пула');
-LangLine.Add('Пасс');
+LangLine.Add('Пароль');
 LangLine.Add('Потоки ЦП для работы');               //40
 LangLine.Add('ЦП');
 LangLine.Add('Старт');
@@ -635,25 +635,25 @@ LangLine.Add('Запуск майнинга');
 LangLine.Add('Адрес пула');
 LangLine.Add('Префикс');                         //45
 LangLine.Add('Вы подключены к пулу');
-LangLine.Add('Сворачивать в трей');
+LangLine.Add('Свернуть в трей');
 LangLine.Add('Звуковые оповещения');
 LangLine.Add('Завершить работу');
 LangLine.Add('Стоп');                                  //50
 LangLine.Add('Время сессии ');
-LangLine.Add('Сид');
+LangLine.Add('Сид');					                    // DO NOT TRANSLATE THIS
 LangLine.Add('Номер');
-LangLine.Add('Данные майнинга');
-LangLine.Add('Выплачено за сессию');                 //55
+LangLine.Add('Подробнее');
+LangLine.Add('Заработано за сессию');                 //55
 LangLine.Add('Язык');
 LangLine.Add('Помощь');
 LangLine.Add('Выход');
 LangLine.Add('Файл');
 LangLine.Add('В трей');                               //60
 LangLine.Add('Звук');
-LangLine.Add('Выплата произойдёт по окончании периода оплаты ');
+LangLine.Add('Выплата произойдёт, как только Вы что-нибудь заработаете ');
 LangLine.Add('Хешрейт: ');
-LangLine.Add('Некорректный адрес');
-LangLine.Add('Данные');                        //65
+LangLine.Add('Некорректный адрес');                   //65
+LangLine.Add('Детали');
 End;
 
 

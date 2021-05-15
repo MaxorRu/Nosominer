@@ -238,6 +238,7 @@ rewrite(archivo);
 writeln(archivo,'YZpool 81.68.115.175 8082 YZpool');
 writeln(archivo,'DogFaceDuke noso.dukedog.io 8082 duke');
 writeln(archivo,'mining.moe 45.180.174.69 8082 miningmoe');
+writeln(archivo,'Russiapool 95.54.44.147 8082 RussiaPool');
 closefile(archivo);
 End;
 

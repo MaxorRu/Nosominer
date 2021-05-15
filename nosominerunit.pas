@@ -163,7 +163,7 @@ Procedure ReadDataFromLine(Linea:string);
 Const
   DataFileName = 'config.txt';
   PoolListFilename = 'poollist.txt';
-  minerversion = '1.70';
+  minerversion = '1.71';
   B58Alphabet : string = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
   B16Alphabet : string = '0123456789ABCDEF';
   OfficialRelease = true;
@@ -949,7 +949,7 @@ else if parameter(linea,0) = 'PONG' then
    begin
    ReadDataFromLine(linea);
    end
-else if parameter(linea,0) = 'JOINFAILED' then
+else if parameter(linea,0) = 'POOLFULL' then
    begin
    Showinfo(LangLine[23]);
    UnLockControls;
