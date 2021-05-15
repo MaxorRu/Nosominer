@@ -237,7 +237,7 @@ rewrite(archivo);
 //writeln(archivo,'nosopoolDE 199.247.3.186 8082 nosopoolDE');
 writeln(archivo,'YZpool 81.68.115.175 8082 YZpool');
 writeln(archivo,'DogFaceDuke noso.dukedog.io 8082 duke');
-writeln(archivo,'mining.moe Node1.mining.moe 8082 miningmoe');
+writeln(archivo,'mining.moe 45.180.174.69 8082 miningmoe');
 closefile(archivo);
 End;
 
