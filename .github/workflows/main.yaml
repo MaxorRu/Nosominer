@@ -1,4 +1,4 @@
-name: Build NosoWallet
+name: Build NosoMiner
 
 on:
   pull_request:
